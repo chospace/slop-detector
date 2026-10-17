@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slop Detector — slop.ai.id</title>
+<meta name="description" content="Deteksi AI slop dalam teks. Paste tulisan, dapat skor + saran perbaikan.">
+<style>
+:root {
+  --bg: #ffffff; --text: #1a1a1a; --muted: #666;
+  --border: #e5e5e5; --accent: #fe5186;
+  --pass: #16a34a; --warn: #d97706; --fail: #dc2626;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1d1e20; --text: #e5e5e5; --muted: #a1a1aa; --border: #333; }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6;
+  padding: 2rem 1rem; max-width: 760px; margin: 0 auto;
+}
+header { text-align: center; margin-bottom: 2rem; }
+header h1 { font-size: 2rem; margin-bottom: 0.3rem; }
+header h1 .cursor { color: var(--accent); animation: blink 1s infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+header p { color: var(--muted); font-size: 0.95rem; }
+textarea {
+  width: 100%; min-height: 200px; padding: 1rem;
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: 1rem; font-family: inherit; resize: vertical;
+  background: var(--bg); color: var(--text); margin-bottom: 1rem;
+}
+.btn-row { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
+button {
+  padding: 0.75rem 1.5rem; background: var(--accent); color: #fff;
+  border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;
+}
+button.secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+#result { display: none; }
+.meter-box {
+  text-align: center; padding: 1.5rem;
+  border: 1px solid var(--border); border-radius: 12px; margin-bottom: 1.5rem;
+}
+.meter-score { font-size: 4rem; font-weight: 800; line-height: 1; }
+.meter-label { font-size: 1.1rem; font-weight: 600; margin-top: 0.3rem; }
+.meter-bar {
+  height: 10px; background: var(--border); border-radius: 99px;
+  margin: 1rem auto 0; max-width: 400px; overflow: hidden;
+}
+.meter-fill { height: 100%; border-radius: 99px; transition: width 0.5s; }
+.finding {
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 1rem; margin-bottom: 0.75rem;
+}
+.finding-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem; }
+.badge {
+  font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.6rem;
+  border-radius: 99px; text-transform: uppercase; white-space: nowrap;
+}
+.badge.high { background: #fee2e2; color: var(--fail); }
+.badge.med { background: #fef3c7; color: var(--warn); }
+.badge.low { background: #dcfce7; color: var(--pass); }
+.finding-name { font-weight: 600; }
+.finding-desc { color: var(--muted); font-size: 0.9rem; }
+.finding-hits {
+  font-family: monospace; font-size: 0.8rem; margin-top: 0.5rem;
+  display: flex; flex-wrap: wrap; gap: 0.3rem;
+}
+.hit {
+  background: #fee2e2; color: var(--fail);
+  padding: 0.15rem 0.5rem; border-radius: 4px;
+}
+@media (prefers-color-scheme: dark) { .hit { background: #450a0a; } }
+.suggestion {
+  border-left: 3px solid var(--accent); padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem; color: var(--muted); font-size: 0.95rem;
+  background: var(--border); border-radius: 0 8px 8px 0; opacity: 0.7;
+}
+footer { text-align: center; margin-top: 3rem; color: var(--muted); font-size: 0.85rem; }
+footer a { color: var(--accent); text-decoration: none; }
+.char-count { text-align: right; color: var(--muted); font-size: 0.8rem; margin-bottom: 0.5rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>slop detector<span class="cursor">_</span></h1>
+  <p>Paste tulisan di bawah. Kami kasih tau seberapa bau AI-nya. 🤖👃</p>
+</header>
+
+<div class="char-count"><span id="charCount">0</span> karakter</div>
+<textarea id="input" placeholder="Paste teks di sini... 
+
+Contoh slop:
+In today's fast-paced digital world, it's important to note that leveraging AI is a game-changer. Moreover, this vibrant tapestry of innovation..."></textarea>
+
+<div class="btn-row">
+  <button id="analyzeBtn">Analisis</button>
+  <button class="secondary" id="sampleBtn">Coba contoh slop</button>
+  <button class="secondary" id="clearBtn">Hapus</button>
+</div>
+
+<div id="result"></div>
+
+<footer>
+  dibuat oleh <a href="https://chospace.github.io">chospace</a> · slop.ai.id<br>
+  <span style="font-size:0.8rem;opacity:0.7">Deteksi berbasis pattern — bukan AI detector sempurna.<br>Teks natural yang rapi bisa lolos; slop yang obvious pasti ketangkep.</span>
+</footer>
+
+<script>
+// ===== SLOP PATTERN DATABASE =====
+const SLOP_PHRASES = [
+  // English - classic AI tells
+  { p: /\bdelve\b/i, w: 8, label: '"delve"' },
+  { p: /in today'?s fast-paced/i, w: 10, label: '"in today\'s fast-paced..."' },
+  { p: /it'?s important to note/i, w: 7, label: '"it\'s important to note"' },
+  { p: /\bgame-?changer\b/i, w: 8, label: '"game-changer"' },
+  { p: /\btapestry\b/i, w: 9, label: '"tapestry"' },
+  { p: /\bvibrant\b/i, w: 6, label: '"vibrant"' },
+  { p: /\bland?scape\b/i, w: 5, label: '"landscape"' },
+  { p: /\bmoreover\b/i, w: 6, label: '"moreover"' },
+  { p: /\bfurthermore\b/i, w: 6, label: '"furthermore"' },
+  { p: /\badditionally\b/i, w: 5, label: '"additionally"' },
+  { p: /\bconsequently\b/i, w: 5, label: '"consequently"' },
+  { p: /\bleverage\b/i, w: 6, label: '"leverage"' },
+  { p: /\bharness\b/i, w: 6, label: '"harness"' },
+  { p: /\bembark\b/i, w: 7, label: '"embark"' },
+  { p: /\bunleash\b/i, w: 7, label: '"unleash"' },
+  { p: /\belevate\b/i, w: 6, label: '"elevate"' },
+  { p: /\bfoster\b/i, w: 5, label: '"foster"' },
+  { p: /\bpivotal\b/i, w: 6, label: '"pivotal"' },
+  { p: /\bcrucial\b/i, w: 4, label: '"crucial"' },
+  { p: /in conclusion\b/i, w: 7, label: '"in conclusion"' },
+  { p: /\boverall,?\b/i, w: 4, label: '"overall"' },
+  { p: /as an ai\b/i, w: 10, label: '"as an AI"' },
+  { p: /it'?s worth noting/i, w: 6, label: '"it\'s worth noting"' },
+  { p: /\bmultifaceted\b/i, w: 7, label: '"multifaceted"' },
+  { p: /\bdelve into\b/i, w: 8, label: '"delve into"' },
+  { p: /let'?s dive in/i, w: 7, label: '"let\'s dive in"' },
+  { p: /\bseamless\b/i, w: 5, label: '"seamless"' },
+  { p: /\brobust\b/i, w: 5, label: '"robust"' },
+  { p: /cutting-?edge/i, w: 5, label: '"cutting-edge"' },
+  { p: /ever-?evolving/i, w: 6, label: '"ever-evolving"' },
+  // Indonesian - AI slop patterns
+  { p: /di era digital yang serba cepat/i, w: 10, label: '"di era digital yang serba cepat"' },
+  { p: /penting untuk dicatat/i, w: 7, label: '"penting untuk dicatat"' },
+  { p: /penting untuk diingat/i, w: 7, label: '"penting untuk diingat"' },
+  { p: /sebagai kesimpulan/i, w: 7, label: '"sebagai kesimpulan"' },
+  { p: /secara keseluruhan/i, w: 5, label: '"secara keseluruhan"' },
+  { p: /tak dapat dipungkiri/i, w: 8, label: '"tak dapat dipungkiri"' },
+  { p: /tidak dapat dipungkiri/i, w: 8, label: '"tidak dapat dipungkiri"' },
+  { p: /dengan demikian\b/i, w: 5, label: '"dengan demikian"' },
+  { p: /selain itu,?\b/i, w: 4, label: '"selain itu"' },
+  { p: /perlu dicatat bahwa/i, w: 6, label: '"perlu dicatat bahwa"' },
+  { p: /dalam dunia yang terus berkembang/i, w: 8, label: '"dalam dunia yang terus berkembang"' },
+  { p: /sebagai penutup/i, w: 6, label: '"sebagai penutup"' },
+  { p: /pada akhirnya\b/i, w: 4, label: '"pada akhirnya"' },
+  { p: /memainkan peran (penting|krusial)/i, w: 6, label: '"memainkan peran penting"' },
+  { p: /menjadi game-?changer/i, w: 8, label: '"game-changer" (ID)' },
+  { p: /lanskap\b/i, w: 5, label: '"lanskap" (AI-ish)' },
+];
+
+const SAMPLE_SLOP = `In today's fast-paced digital world, it's important to note that leveraging artificial intelligence is a game-changer for businesses. Moreover, this vibrant tapestry of innovation creates a multifaceted landscape of opportunities.
+
+Furthermore, companies that embark on this journey will unleash unprecedented potential. Additionally, it's worth noting that the seamless integration of AI is crucial for staying competitive.
+
+In conclusion, overall, the pivotal role of AI cannot be overstated. Let's delve into this ever-evolving realm together! 🚀🚀🚀`;
+
+function analyze(text) {
+  const findings = [];
+  let slopScore = 0;
+  const words = text.split(/\s+/).filter(w => w.length).length;
+  if (words < 10) return { error: 'Teks terlalu pendek (minimal 10 kata).' };
+
+  // 1. Slop phrases
+  const phraseHits = [];
+  SLOP_PHRASES.forEach(({ p, w, label }) => {
+    const matches = text.match(new RegExp(p.source, p.flags.includes('g') ? p.flags : p.flags + 'g'));
+    if (matches) {
+      slopScore += w * matches.length;
+      phraseHits.push(label + (matches.length > 1 ? ` ×${matches.length}` : ''));
+    }
+  });
+  if (phraseHits.length) {
+    findings.push({
+      level: phraseHits.length >= 5 ? 'high' : phraseHits.length >= 2 ? 'med' : 'low',
+      name: 'Frase khas AI',
+      desc: `${phraseHits.length} pattern AI terdeteksi. Ini kata/frasa yang overused banget sama LLM.`,
+      hits: phraseHits.slice(0, 12)
+    });
+  }
+
+  // 2. Emoji density
+  const emojiRe = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+  const emojis = text.match(emojiRe) || [];
+  const emojiRatio = emojis.length / words;
+  if (emojis.length >= 3 || emojiRatio > 0.02) {
+    slopScore += Math.min(25, emojis.length * 4);
+    findings.push({
+      level: emojis.length >= 8 ? 'high' : 'med',
+      name: 'Emoji berlebihan',
+      desc: `${emojis.length} emoji dalam ${words} kata. AI demen banget naro emoji di setiap poin.`,
+      hits: [...new Set(emojis)].slice(0, 8)
+    });
+  }
+
+  // 3. Exclamation marks
+  const exclams = (text.match(/!/g) || []).length;
+  if (exclams >= 3) {
+    slopScore += Math.min(15, exclams * 3);
+    findings.push({
+      level: 'med', name: 'Tanda seru berlebihan',
+      desc: `${exclams}x tanda seru. Manusia normal nggak se-excited itu.`,
+      hits: [`"!" × ${exclams}`]
+    });
+  }
+
+  // 4. Bullet/number list ratio
+  const lines = text.split('\n').filter(l => l.trim());
+  const bulletLines = lines.filter(l => /^[\s]*[-*•\d]+\s*[.)]\s/.test(l)).length;
+  if (lines.length >= 5 && bulletLines / lines.length > 0.5) {
+    slopScore += 12;
+    findings.push({
+      level: 'med', name: 'Struktur list berlebihan',
+      desc: `${bulletLines} dari ${lines.length} baris adalah list. AI suka banget format list buat kelihatan rapi.`,
+      hits: [`${Math.round(bulletLines/lines.length*100)}% baris adalah list`]
+    });
+  }
+
+  // 5. Repetitive paragraph starters
+  const paras = text.split(/\n\s*\n/).filter(p => p.trim());
+  if (paras.length >= 3) {
+    const starters = paras.map(p => p.trim().split(/\s+/).slice(0, 3).join(' ').toLowerCase());
+    const counts = {};
+    starters.forEach(s => counts[s] = (counts[s] || 0) + 1);
+    const repeated = Object.entries(counts).filter(([k, v]) => v > 1);
+    if (repeated.length) {
+      slopScore += repeated.length * 8;
+      findings.push({
+        level: 'med', name: 'Paragraf repetitif',
+        desc: `Beberapa paragraf dibuka dengan pola yang sama — ciri khas template AI.`,
+        hits: repeated.map(([k, v]) => `"${k}..." ×${v}`)
+      });
+    }
+  }
+
+  // 6. "Firstly/Secondly" enumeration
+  if (/\b(firstly|secondly|thirdly|pertama-tama|kedua,|ketiga,)\b/i.test(text)) {
+    slopScore += 8;
+    findings.push({
+      level: 'low', name: 'Enumerasi kaku',
+      desc: 'Firstly/Secondly/Thirdly — manusia jarang nulis kayak gini.',
+      hits: ['enumerasi AI-style']
+    });
+  }
+
+  // Normalize to 0-100 (slop meter: higher = more slop)
+  slopScore = Math.min(100, Math.round(slopScore * (100 / Math.max(words * 0.5, 60)) * 2));
+  slopScore = Math.min(100, slopScore);
+
+  return { score: slopScore, findings, words };
+}
+
+function verdict(score) {
+  if (score >= 70) return { label: 'SLOP BERAT 🚨', color: 'var(--fail)', tip: 'Ini bau AI banget. Tulis ulang dengan suaramu sendiri — pakai pengalaman pribadi, opini, dan bahasa sehari-hari.' };
+  if (score >= 40) return { label: 'Agak slop ⚠️', color: 'var(--warn)', tip: 'Ada beberapa pattern AI. Coba ganti frasa yang di-highlight dengan bahasa yang lebih natural.' };
+  if (score >= 15) return { label: 'Sedikit bau AI 👀', color: 'var(--warn)', tip: 'Hampir bersih! Bersihin dikit lagi frasa yang ketangkep.' };
+  return { label: 'Bersih ✨', color: 'var(--pass)', tip: 'Teks ini terdengar manusiawi. Pertahankan!' };
+}
+
+// ===== UI =====
+const input = document.getElementById('input');
+const result = document.getElementById('result');
+const charCount = document.getElementById('charCount');
+
+input.addEventListener('input', () => charCount.textContent = input.value.length);
+document.getElementById('clearBtn').addEventListener('click', () => {
+  input.value = ''; charCount.textContent = '0'; result.style.display = 'none';
+});
+document.getElementById('sampleBtn').addEventListener('click', () => {
+  input.value = SAMPLE_SLOP; charCount.textContent = SAMPLE_SLOP.length;
+});
+
+document.getElementById('analyzeBtn').addEventListener('click', () => {
+  const text = input.value.trim();
+  if (!text) return;
+  const r = analyze(text);
+  if (r.error) {
+    result.innerHTML = `<div class="finding"><div class="finding-desc">${r.error}</div></div>`;
+    result.style.display = 'block';
+    return;
+  }
+  const v = verdict(r.score);
+  let html = `<div class="meter-box">
+    <div class="meter-score" style="color:${v.color}">${r.score}</div>
+    <div class="meter-label" style="color:${v.color}">${v.label}</div>
+    <div style="color:var(--muted);font-size:0.85rem;margin-top:0.3rem">${r.words} kata dianalisis</div>
+    <div class="meter-bar"><div class="meter-fill" style="width:${r.score}%;background:${v.color}"></div></div>
+  </div>
+  <div class="suggestion">💡 ${v.tip}</div>`;
+
+  if (!r.findings.length) {
+    html += `<div class="finding"><div class="finding-head"><span class="badge low">Bersih</span><span class="finding-name">Tidak ada pattern slop terdeteksi</span></div></div>`;
+  } else {
+    r.findings.forEach(f => {
+      const badge = f.level === 'high' ? 'Parah' : f.level === 'med' ? 'Sedang' : 'Ringan';
+      html += `<div class="finding">
+        <div class="finding-head"><span class="badge ${f.level}">${badge}</span><span class="finding-name">${f.name}</span></div>
+        <div class="finding-desc">${f.desc}</div>
+        <div class="finding-hits">${f.hits.map(h => `<span class="hit">${escapeHtml(h)}</span>`).join('')}</div>
+      </div>`;
+    });
+  }
+  result.innerHTML = html;
+  result.style.display = 'block';
+  result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+</script>
+</body>
+</html>
