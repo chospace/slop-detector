@@ -80,6 +80,29 @@ button.secondary { background: transparent; color: var(--muted); border: 1px sol
 footer { text-align: center; margin-top: 3rem; color: var(--muted); font-size: 0.85rem; }
 footer a { color: var(--accent); text-decoration: none; }
 .char-count { text-align: right; color: var(--muted); font-size: 0.8rem; margin-bottom: 0.5rem; }
+.mode-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.mode-tab {
+  padding: 0.6rem 1.2rem; border: 1px solid var(--border); border-radius: 8px;
+  background: transparent; color: var(--muted); cursor: pointer; font-size: 0.95rem;
+}
+.mode-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+#urlInput {
+  width: 100%; padding: 0.9rem 1rem; font-size: 1rem;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--text); margin-bottom: 1rem;
+}
+#urlMode { display: none; }
+.loading { text-align: center; padding: 2rem; color: var(--muted); }
+.spinner {
+  display: inline-block; width: 24px; height: 24px;
+  border: 3px solid var(--border); border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 0.5rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-box {
+  border: 1px solid var(--fail); border-radius: 8px; padding: 1rem;
+  color: var(--fail); margin-bottom: 1rem; font-size: 0.95rem;
+}
 </style>
 </head>
 <body>
@@ -89,11 +112,23 @@ footer a { color: var(--accent); text-decoration: none; }
   <p>Paste tulisan di bawah. Kami kasih tau seberapa bau AI-nya. 🤖👃</p>
 </header>
 
+<div class="mode-tabs">
+  <button class="mode-tab active" id="tabText">📝 Teks</button>
+  <button class="mode-tab" id="tabUrl">🔗 URL</button>
+</div>
+
+<div id="textMode">
 <div class="char-count"><span id="charCount">0</span> karakter</div>
 <textarea id="input" placeholder="Paste teks di sini... 
 
 Contoh slop:
 In today's fast-paced digital world, it's important to note that leveraging AI is a game-changer. Moreover, this vibrant tapestry of innovation..."></textarea>
+</div>
+
+<div id="urlMode">
+<input type="url" id="urlInput" placeholder="https://contoh.com/artikel">
+<div style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem">Tool akan mengambil teks dari halaman web tersebut lalu menganalisisnya.</div>
+</div>
 
 <div class="btn-row">
   <button id="analyzeBtn">Analisis</button>
@@ -269,6 +304,48 @@ function verdict(score) {
   return { label: 'Bersih ✨', color: 'var(--pass)', tip: 'Teks ini terdengar manusiawi. Pertahankan!' };
 }
 
+// ===== MODE TABS =====
+const tabText = document.getElementById('tabText');
+const tabUrl = document.getElementById('tabUrl');
+const textMode = document.getElementById('textMode');
+const urlMode = document.getElementById('urlMode');
+let currentMode = 'text';
+
+tabText.addEventListener('click', () => {
+  currentMode = 'text';
+  tabText.classList.add('active'); tabUrl.classList.remove('active');
+  textMode.style.display = 'block'; urlMode.style.display = 'none';
+});
+tabUrl.addEventListener('click', () => {
+  currentMode = 'url';
+  tabUrl.classList.add('active'); tabText.classList.remove('active');
+  textMode.style.display = 'none'; urlMode.style.display = 'block';
+});
+
+// ===== URL FETCH & TEXT EXTRACTION =====
+async function fetchUrlText(url) {
+  // Normalize URL
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+  const res = await fetch(proxy);
+  if (!res.ok) throw new Error('Gagal mengambil halaman.');
+  const data = await res.json();
+  const html = data.contents;
+  if (!html || html.length < 500) throw new Error('Halaman kosong atau diblokir.');
+
+  // Extract text from HTML
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  // Remove noise
+  doc.querySelectorAll('script, style, nav, header, footer, aside, form, iframe').forEach(el => el.remove());
+  // Prefer article/main content
+  const main = doc.querySelector('article') || doc.querySelector('main') || doc.body;
+  let text = main.innerText || '';
+  // Clean up
+  text = text.replace(/\n{3,}/g, '\n\n').trim();
+  if (text.split(/\s+/).length < 10) throw new Error('Teks terlalu sedikit untuk dianalisis.');
+  return text;
+}
+
 // ===== UI =====
 const input = document.getElementById('input');
 const result = document.getElementById('result');
@@ -282,9 +359,33 @@ document.getElementById('sampleBtn').addEventListener('click', () => {
   input.value = SAMPLE_SLOP; charCount.textContent = SAMPLE_SLOP.length;
 });
 
-document.getElementById('analyzeBtn').addEventListener('click', () => {
+document.getElementById('analyzeBtn').addEventListener('click', async () => {
+  result.style.display = 'block';
+
+  if (currentMode === 'url') {
+    const urlVal = document.getElementById('urlInput').value.trim();
+    if (!urlVal) {
+      result.innerHTML = `<div class="error-box">Masukin URL dulu ya.</div>`;
+      return;
+    }
+    result.innerHTML = `<div class="loading"><div class="spinner"></div><br>Mengambil halaman...</div>`;
+    try {
+      const fetchedText = await fetchUrlText(urlVal);
+      input.value = fetchedText;
+      charCount.textContent = fetchedText.length;
+      runAnalysis(fetchedText);
+    } catch (e) {
+      result.innerHTML = `<div class="error-box">⚠️ ${escapeHtml(e.message)}<br><span style="font-size:0.85rem;opacity:0.8">Coba copy-paste teksnya manual ke mode Teks.</span></div>`;
+    }
+    return;
+  }
+
   const text = input.value.trim();
   if (!text) return;
+  runAnalysis(text);
+});
+
+function runAnalysis(text) {
   const r = analyze(text);
   if (r.error) {
     result.innerHTML = `<div class="finding"><div class="finding-desc">${r.error}</div></div>`;
@@ -315,7 +416,7 @@ document.getElementById('analyzeBtn').addEventListener('click', () => {
   result.innerHTML = html;
   result.style.display = 'block';
   result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-});
+}
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
