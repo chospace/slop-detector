@@ -728,6 +728,68 @@ function analyze(text) {
     });
   }
 
+  // 12. Gemini-style patterns (formal Indonesian essay)
+  const geminiFindings = [];
+
+  // 12a. Subheading dengan colon berlebihan ("Istilah: penjelasan")
+  const colonHeads = text.match(/^[A-Z][^:\n]{5,60}:/gm) || [];
+  if (colonHeads.length >= 4) {
+    slopScore += Math.min(15, colonHeads.length * 2);
+    geminiFindings.push(colonHeads.length + ' subheading berpola "Istilah:"');
+  }
+
+  // 12b. Kata akademik formal berlebihan
+  const academicWords = text.match(/\b(anatom(?:i|is)|sistemik|komprehensif|struktural|holistik|paradigma|ekosistem|infrastruktur|transformasi|disrupsi)\b/gi) || [];
+  if (academicWords.length >= 4) {
+    slopScore += Math.min(12, academicWords.length * 2);
+    geminiFindings.push(academicWords.length + ' kata akademik formal');
+  }
+
+  // 12c. "melainkan" — kontras formal favorit AI
+  const melainkan = (text.match(/\bmelainkan\b/gi) || []).length;
+  if (melainkan >= 2) {
+    slopScore += melainkan * 4;
+    geminiFindings.push('"melainkan" ×' + melainkan);
+  }
+
+  // 12d. "bukan sekadar / bukan hanya" — retorika AI
+  const bukanSekadar = (text.match(/\bbukan (sekadar|hanya|lagi sekadar)\b/gi) || []).length;
+  if (bukanSekadar >= 2) {
+    slopScore += bukanSekadar * 4;
+    geminiFindings.push('"bukan sekadar/hanya" ×' + bukanSekadar);
+  }
+
+  // 12e. Nol kata ganti orang pertama dalam teks panjang = impersonal (ciri AI)
+  const firstPerson = (text.match(/\b(saya|aku|gue|gua|kami|kita)\b/gi) || []).length;
+  const wordCount = text.split(/\s+/).filter(w => w.length).length;
+  if (wordCount > 300 && firstPerson === 0) {
+    slopScore += 8;
+    geminiFindings.push('tanpa sudut pandang personal sama sekali');
+  }
+
+  // 12f. Frasa pembuka esai AI
+  const essayOpeners = [
+    /setiap kali .* tiba,/i,
+    /bukan lagi sekadar/i,
+    /menuntut strategi komprehensif/i,
+    /dari hulu ke hilir/i,
+    /bukan semata .* melainkan/i,
+  ];
+  const openerHits = essayOpeners.filter(p => p.test(text)).length;
+  if (openerHits >= 2) {
+    slopScore += openerHits * 5;
+    geminiFindings.push(openerHits + ' frasa pembuka esai AI');
+  }
+
+  if (geminiFindings.length) {
+    findings.push({
+      level: geminiFindings.length >= 3 ? 'high' : 'med',
+      name: 'Gaya esai formal AI',
+      desc: 'Pola penulisan esai formal yang khas dari model AI (terutama Gemini).',
+      hits: geminiFindings
+    });
+  }
+
   return { score: slopScore, findings, words, topWords, sentLens };
 }
 
