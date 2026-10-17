@@ -161,6 +161,57 @@ textarea:focus, #urlInput:focus {
   color: var(--fail); font-size: 0.93rem;
 }
 
+/* Visualizations */
+.viz-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.viz-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.15rem; }
+.viz-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 1rem; }
+.viz-row {
+  display: flex; align-items: center; gap: 0.75rem;
+  margin-bottom: 0.45rem; font-size: 0.88rem;
+}
+.viz-label {
+  width: 110px; flex-shrink: 0; text-align: right;
+  font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.viz-track {
+  flex: 1; height: 18px; background: var(--bg);
+  border-radius: 99px; overflow: hidden;
+}
+.viz-fill {
+  height: 100%; background: var(--accent); border-radius: 99px;
+  min-width: 4px; transition: width 0.4s;
+}
+.viz-count {
+  width: 44px; flex-shrink: 0; color: var(--muted);
+  font-variant-numeric: tabular-nums; font-size: 0.82rem;
+}
+.sent-bars {
+  display: flex; align-items: flex-end; gap: 4px;
+  min-height: 90px; padding: 0.5rem 0;
+}
+.sent-bar {
+  flex: 1; min-width: 6px; background: var(--accent);
+  border-radius: 3px 3px 0 0; opacity: 0.75;
+  transition: height 0.3s;
+}
+.sent-bar.short { background: var(--pass); }
+.sent-bar.long { background: var(--warn); }
+.viz-legend {
+  display: flex; gap: 1.25rem; margin-top: 0.5rem;
+  font-size: 0.8rem; color: var(--muted);
+}
+.viz-legend .dot {
+  display: inline-block; width: 10px; height: 10px;
+  border-radius: 3px; background: var(--accent);
+  margin-right: 0.35rem; vertical-align: baseline;
+}
+.viz-legend .dot.short { background: var(--pass); }
+.viz-legend .dot.long { background: var(--warn); }
+
 /* Footer */
 footer {
   margin-top: 4rem; padding-top: 1.5rem;
@@ -406,7 +457,19 @@ function analyze(text) {
   }
 
   slopScore = Math.min(100, Math.round(slopScore * (100 / Math.max(words * 0.5, 60)) * 2));
-  return { score: slopScore, findings, words };
+
+  // 9. Word frequency data (for visualization, not scored)
+  const freqMap = {};
+  allWords.forEach(w => freqMap[w] = (freqMap[w] || 0) + 1);
+  const topWords = Object.entries(freqMap)
+    .filter(([w]) => w.length > 3)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  // 10. Sentence lengths (for visualization, not scored)
+  const sentLens = sentences.map(s => s.split(/\s+/).length);
+
+  return { score: slopScore, findings, words, topWords, sentLens };
 }
 
 function verdict(score) {
@@ -545,8 +608,42 @@ function runAnalysis(text) {
         + '</div>';
     });
   }
+
+  // Visualizations
+  html += renderWordFreq(r.topWords || []);
+  html += renderSentenceViz(r.sentLens || []);
+
   result.innerHTML = html;
   result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ===== VISUALIZATIONS =====
+function renderWordFreq(topWords) {
+  if (!topWords.length) return '';
+  const max = topWords[0][1];
+  let html = '<div class="viz-section"><h3>Kata paling sering muncul</h3><div class="viz-bars">';
+  topWords.forEach(([word, count]) => {
+    const pct = Math.round((count / max) * 100);
+    html += '<div class="viz-row"><span class="viz-label">' + escapeHtml(word) + '</span>'
+      + '<div class="viz-track"><div class="viz-fill" style="width:' + pct + '%"></div></div>'
+      + '<span class="viz-count">' + count + '×</span></div>';
+  });
+  return html + '</div></div>';
+}
+
+function renderSentenceViz(sentLens) {
+  if (sentLens.length < 3) return '';
+  const max = Math.max(...sentLens);
+  let html = '<div class="viz-section"><h3>Variasi panjang kalimat</h3>'
+    + '<p class="viz-desc">Tiap batang = satu kalimat. Variasi yang sehat menunjukkan penulisan manusiawi.</p>'
+    + '<div class="sent-bars">';
+  sentLens.forEach(len => {
+    const h = Math.max(8, Math.round((len / max) * 80));
+    const cls = len <= 5 ? 'short' : len >= 20 ? 'long' : '';
+    html += '<div class="sent-bar ' + cls + '" style="height:' + h + 'px" title="' + len + ' kata"></div>';
+  });
+  return html + '</div><div class="viz-legend"><span><i class="dot short"></i>Pendek (≤5)</span>'
+    + '<span><i class="dot"></i>Sedang</span><span><i class="dot long"></i>Panjang (≥20)</span></div></div>';
 }
 
 function escapeHtml(s) {
