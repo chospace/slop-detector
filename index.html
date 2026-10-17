@@ -462,7 +462,14 @@ function analyze(text) {
   const freqMap = {};
   allWords.forEach(w => freqMap[w] = (freqMap[w] || 0) + 1);
   const topWords = Object.entries(freqMap)
-    .filter(([w]) => w.length > 3)
+    .filter(([w]) => {
+      if (w.length <= 3) return false;
+      // Skip token yang kayak identifier kode
+      if (/^(ctx|fill|stroke|begin|close|move|line|arc|rect|var|let|const|function|return|new|this)[a-z]*/i.test(w) && /[A-Z]/.test(w)) return false;
+      if (/^(ctx|fspx|px|rgb|rgba)/i.test(w)) return false;
+      if (/^\d/.test(w)) return false; // diawali angka
+      return true;
+    })
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10);
 
@@ -523,6 +530,24 @@ async function fetchUrlText(url) {
   const data = await res.json();
   if (data.status !== 'success') throw new Error('Gagal mengambil halaman.');
   let text = (data.data && data.data.text) || '';
+
+  // Bersihkan artefak kode JS yang lolos ekstraksi
+  text = text
+    .split('\n')
+    .filter(line => {
+      const t = line.trim();
+      if (!t) return false;
+      if (t.length > 400) return false; // minified JS = baris super panjang
+      // Pola khas kode: banyak { } ; = ( ) tanpa spasi natural
+      const codeChars = (t.match(/[{};=()<>]/g) || []).length;
+      if (codeChars > t.length * 0.15) return false;
+      // Baris yang didominasi camelCase tanpa spasi
+      const words = t.split(/\s+/);
+      if (words.length <= 2 && /^[a-zA-Z0-9_$]+$/.test(t) && t.length > 15) return false;
+      return true;
+    })
+    .join('\n');
+
   text = text.replace(/\s{3,}/g, '\n\n').trim();
   const wc = text.split(/\s+/).filter(w => w.length).length;
   if (wc < 10) throw new Error('Teks terlalu sedikit untuk dianalisis.');
