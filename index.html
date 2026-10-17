@@ -260,18 +260,12 @@ textarea:focus, #urlInput:focus {
   font-size: 2.5rem; font-weight: 800; font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em; line-height: 1;
 }
-.fake-bar {
-  height: 14px; border-radius: 99px; position: relative;
-  background: linear-gradient(90deg, var(--pass) 0%, var(--warn) 50%, var(--fail) 100%);
-  opacity: 0.25;
-}
-.fake-marker {
-  position: absolute; top: -4px; bottom: -4px; width: 4px;
-  border-radius: 2px; background: var(--text);
-  transform: translateX(-50%);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  transition: left 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
+.fake-bar { display: flex; height: 16px; border-radius: 99px; gap: 3px; }
+.fake-seg { flex: 1; border-radius: 4px; opacity: 0.15; transition: opacity 0.3s; }
+.fake-seg.lit { opacity: 1; }
+.fake-seg.seg-g { background: var(--pass); }
+.fake-seg.seg-y { background: var(--warn); }
+.fake-seg.seg-r { background: var(--fail); }
 .fake-scale {
   display: flex; justify-content: space-between;
   font-size: 0.75rem; color: var(--muted); margin-top: 0.4rem;
@@ -1434,12 +1428,20 @@ function renderSentenceHighlight(text) {
 // Probability meter
 function renderFakeMeter(score, verdictLabel, verdictDesc) {
   const color = score >= 60 ? 'var(--fail)' : score >= 10 ? 'var(--warn)' : 'var(--pass)';
+  // 10 segmen: 0-3 hijau, 4-6 kuning, 7-9 merah
+  const litCount = Math.round(score / 10);
+  let segs = '';
+  for (let i = 0; i < 10; i++) {
+    const zone = i < 4 ? 'seg-g' : i < 7 ? 'seg-y' : 'seg-r';
+    const lit = i < litCount ? ' lit' : '';
+    segs += '<div class="fake-seg ' + zone + lit + '"></div>';
+  }
   return '<div class="fake-meter">'
     + '<div class="fake-meter-top">'
     + '<span class="fake-label">Probabilitas AI</span>'
     + '<span class="fake-pct" style="color:' + color + '">' + score + '%</span>'
     + '</div>'
-    + '<div class="fake-bar"><div class="fake-marker" style="left:' + score + '%"></div></div>'
+    + '<div class="fake-bar">' + segs + '</div>'
     + '<div class="fake-scale"><span>0% Manusia</span><span>100% AI</span></div>'
     + '<div class="fake-verdict"><strong>' + verdictLabel + '.</strong> ' + verdictDesc + '</div>'
     + '</div>';
