@@ -33,87 +33,7 @@
   "isAccessibleForFree": true
 }
 
-// ===== I18N (ID/EN) =====
-const I18N = {
-  id: {
-    nav_faq: 'FAQ',
-    hero_desc: 'Tempel teks atau masukkan URL. Kami menganalisis pola linguistik, ritme kalimat, dan struktur penulisan untuk memperkirakan kemungkinan teks dibuat oleh AI.',
-    hero_badges: '✓ Gratis · Tanpa daftar · 100% privat di browser',
-    input_placeholder: 'Tempel teks di sini untuk dianalisis...',
-    chars: 'karakter', words: 'kata',
-    btn_analyze: 'Analisis', btn_sample: 'Contoh', btn_file: 'File', btn_clear: 'Hapus',
-    faq_title: 'Pertanyaan umum',
-    footer_tagline: 'slopAI — detektor tulisan AI gratis',
-    footer_made: 'Dibuat oleh',
-  },
-  en: {
-    nav_faq: 'FAQ',
-    hero_desc: 'Paste text or enter a URL. We analyze linguistic patterns, sentence rhythm, and writing structure to estimate the likelihood text was AI-generated.',
-    hero_badges: '✓ Free · No sign-up · 100% private in your browser',
-    input_placeholder: 'Paste text here to analyze...',
-    chars: 'characters', words: 'words',
-    btn_analyze: 'Analyze', btn_sample: 'Samples', btn_file: 'File', btn_clear: 'Clear',
-    faq_title: 'Frequently asked questions',
-    footer_tagline: 'slopAI — free AI text detector',
-    footer_made: 'Made by',
-  }
-};
 
-const FAQ_I18N = {
-  id: [
-    { q: 'Bagaimana cara kerjanya?', a: '<strong>Gratis — 9 metode rule-based:</strong> frase khas AI (70+ pola), burstiness, lexical diversity, entropi kata, gaya ChatGPT/Claude/Gemini, pola visual LinkedIn, dan analisis struktur.<br><br><strong>Pro (segera) — ML model:</strong> <em>Analisis Mendalam</em> pakai model machine learning yang dilatih khusus deteksi AI, lebih akurat untuk kasus borderline.<br><br>Semua tier Gratis berjalan 100% di browser — teks tidak dikirim ke server manapun.' },
-    { q: 'Apa itu AI detector?', a: 'AI detector menganalisis tulisan untuk mencari pola yang khas dari teks buatan AI — seperti frase yang overused, struktur kalimat yang terlalu seragam, atau gaya penulisan yang terlalu formal. Hasilnya berupa probabilitas, bukan vonis mutlak.' },
-    { q: 'Seberapa akurat slopAI?', a: 'Tier gratis akurat ~80% untuk teks AI yang obvious, berdasarkan pengujian internal dengan 40 sampel teks. Tapi bisa miss jika teks AI sudah diedit manusia, dan bisa false positive untuk tulisan manusia yang sangat formal. Selalu gunakan sebagai sinyal awal, bukan keputusan final.' },
-    { q: 'Apakah data saya dikirim ke server?', a: 'Tidak. Tier gratis berjalan 100% di browser Anda — teks tidak pernah meninggalkan perangkat. Tidak ada akun, tidak ada tracking.' },
-    { q: 'Bahasa apa saja yang didukung?', a: 'Indonesia dan Inggris didukung penuh dengan 70+ pola khusus. Bahasa lain tetap bisa dianalisis dengan metode statistik (burstiness, entropi, lexical diversity) tapi tanpa pola frase spesifik.' },
-    { q: 'Kenapa tulisan saya ke-detect AI padahal saya yang nulis?', a: 'False positive bisa terjadi, terutama untuk tulisan yang sangat formal, terstruktur rapi, atau menggunakan banyak istilah teknis. Model AI dilatih meniru gaya formal, jadi gaya formal manusia bisa terlihat "AI". Coba variasikan panjang kalimat dan tambahkan sentuhan personal.' },
-    { q: 'Apa bedanya dengan tool deteksi AI lain?', a: 'Kebanyakan tool deteksi AI pakai model ML di server — berbayar, data Anda dikirim ke server mereka, dan harus daftar. slopAI gratis memakai analisis pola + statistik yang berjalan 100% di browser: lebih privat, tanpa batas, tanpa daftar. Untuk kasus sulit, tier Pro kami (segera) akan memakai ML juga.' },
-  ],
-  en: [
-    { q: 'How does it work?', a: '<strong>Free — 9 rule-based methods:</strong> AI phrases (70+ patterns), burstiness, lexical diversity, word entropy, ChatGPT/Claude/Gemini styles, visual patterns, and structure analysis.<br><br><strong>Pro (coming) — ML model:</strong> <em>Deep Analysis</em> uses a machine learning model trained specifically for AI detection, more accurate for borderline cases.<br><br>All Free tier runs 100% in your browser — text never leaves your device.' },
-    { q: 'What is an AI detector?', a: 'An AI detector analyzes writing for patterns typical of AI-generated text — like overused phrases, overly uniform sentence structure, or excessively formal style. The result is a probability, not an absolute verdict.' },
-    { q: 'How accurate is slopAI?', a: 'The free tier is ~80% accurate for obvious AI text, based on internal testing with 40 sample texts. But it can miss AI text edited by humans, and can false-positive on very formal human writing. Always use as an initial signal, not a final decision.' },
-    { q: 'Is my data sent to a server?', a: 'No. The free tier runs 100% in your browser — text never leaves your device. No account, no tracking.' },
-    { q: 'What languages are supported?', a: 'Indonesian and English are fully supported with 70+ patterns. Other languages can still be analyzed with statistical methods (burstiness, entropy, lexical diversity) but without specific phrase patterns.' },
-    { q: 'Why was my writing flagged as AI when I wrote it?', a: 'False positives can happen, especially for very formal, well-structured writing, or text with lots of technical terms. AI models are trained to mimic formal style, so formal human writing can look "AI". Try varying sentence length and adding personal touches.' },
-    { q: 'How is it different from other AI detectors?', a: 'Most AI detectors use server-side ML models — paid, your data sent to their servers, and require sign-up. slopAI free uses pattern + statistical analysis running 100% in your browser: more private, unlimited, no sign-up. For difficult cases, our Pro tier (coming) will use ML too.' },
-  ]
-};
-
-function setLang(lang) {
-  const t = I18N[lang] || I18N.id;
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    if (t[key]) el.innerHTML = t[key];
-  });
-  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
-    const key = el.getAttribute('data-i18n-ph');
-    if (t[key]) el.placeholder = t[key];
-  });
-  // FAQ
-  const faqItems = document.querySelectorAll('.faq-item');
-  const faqData = FAQ_I18N[lang] || FAQ_I18N.id;
-  faqItems.forEach((item, i) => {
-    if (faqData[i]) {
-      item.querySelector('summary').textContent = faqData[i].q;
-      item.querySelector('.faq-answer').innerHTML = faqData[i].a;
-    }
-  });
-  // Update toggle button + html lang
-  document.getElementById('langToggle').textContent = lang === 'id' ? 'EN' : 'ID';
-  document.documentElement.lang = lang;
-  localStorage.setItem('slopai-lang', lang);
-}
-
-(function() {
-  const saved = localStorage.getItem('slopai-lang') || 'id';
-  // Apply after DOM ready (script at end of body, so immediate)
-  setLang(saved);
-  document.getElementById('langToggle').addEventListener('click', () => {
-    const current = localStorage.getItem('slopai-lang') || 'id';
-    setLang(current === 'id' ? 'en' : 'id');
-  });
-})();
 
 </script>
 <script type="application/ld+json">
@@ -1633,6 +1553,89 @@ function renderSentenceViz(sentLens) {
 function escapeHtml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
+</script>
+<script>
+// ===== I18N (ID/EN) =====
+const I18N = {
+  id: {
+    nav_faq: 'FAQ',
+    hero_desc: 'Tempel teks atau masukkan URL. Kami menganalisis pola linguistik, ritme kalimat, dan struktur penulisan untuk memperkirakan kemungkinan teks dibuat oleh AI.',
+    hero_badges: '✓ Gratis · Tanpa daftar · 100% privat di browser',
+    input_placeholder: 'Tempel teks di sini untuk dianalisis...',
+    chars: 'karakter', words: 'kata',
+    btn_analyze: 'Analisis', btn_sample: 'Contoh', btn_file: 'File', btn_clear: 'Hapus',
+    faq_title: 'Pertanyaan umum',
+    footer_tagline: 'slopAI — detektor tulisan AI gratis',
+    footer_made: 'Dibuat oleh',
+  },
+  en: {
+    nav_faq: 'FAQ',
+    hero_desc: 'Paste text or enter a URL. We analyze linguistic patterns, sentence rhythm, and writing structure to estimate the likelihood text was AI-generated.',
+    hero_badges: '✓ Free · No sign-up · 100% private in your browser',
+    input_placeholder: 'Paste text here to analyze...',
+    chars: 'characters', words: 'words',
+    btn_analyze: 'Analyze', btn_sample: 'Samples', btn_file: 'File', btn_clear: 'Clear',
+    faq_title: 'Frequently asked questions',
+    footer_tagline: 'slopAI — free AI text detector',
+    footer_made: 'Made by',
+  }
+};
+
+const FAQ_I18N = {
+  id: [
+    { q: 'Bagaimana cara kerjanya?', a: '<strong>Gratis — 9 metode rule-based:</strong> frase khas AI (70+ pola), burstiness, lexical diversity, entropi kata, gaya ChatGPT/Claude/Gemini, pola visual LinkedIn, dan analisis struktur.<br><br><strong>Pro (segera) — ML model:</strong> <em>Analisis Mendalam</em> pakai model machine learning yang dilatih khusus deteksi AI, lebih akurat untuk kasus borderline.<br><br>Semua tier Gratis berjalan 100% di browser — teks tidak dikirim ke server manapun.' },
+    { q: 'Apa itu AI detector?', a: 'AI detector menganalisis tulisan untuk mencari pola yang khas dari teks buatan AI — seperti frase yang overused, struktur kalimat yang terlalu seragam, atau gaya penulisan yang terlalu formal. Hasilnya berupa probabilitas, bukan vonis mutlak.' },
+    { q: 'Seberapa akurat slopAI?', a: 'Tier gratis akurat ~80% untuk teks AI yang obvious, berdasarkan pengujian internal dengan 40 sampel teks. Tapi bisa miss jika teks AI sudah diedit manusia, dan bisa false positive untuk tulisan manusia yang sangat formal. Selalu gunakan sebagai sinyal awal, bukan keputusan final.' },
+    { q: 'Apakah data saya dikirim ke server?', a: 'Tidak. Tier gratis berjalan 100% di browser Anda — teks tidak pernah meninggalkan perangkat. Tidak ada akun, tidak ada tracking.' },
+    { q: 'Bahasa apa saja yang didukung?', a: 'Indonesia dan Inggris didukung penuh dengan 70+ pola khusus. Bahasa lain tetap bisa dianalisis dengan metode statistik (burstiness, entropi, lexical diversity) tapi tanpa pola frase spesifik.' },
+    { q: 'Kenapa tulisan saya ke-detect AI padahal saya yang nulis?', a: 'False positive bisa terjadi, terutama untuk tulisan yang sangat formal, terstruktur rapi, atau menggunakan banyak istilah teknis. Model AI dilatih meniru gaya formal, jadi gaya formal manusia bisa terlihat "AI". Coba variasikan panjang kalimat dan tambahkan sentuhan personal.' },
+    { q: 'Apa bedanya dengan tool deteksi AI lain?', a: 'Kebanyakan tool deteksi AI pakai model ML di server — berbayar, data Anda dikirim ke server mereka, dan harus daftar. slopAI gratis memakai analisis pola + statistik yang berjalan 100% di browser: lebih privat, tanpa batas, tanpa daftar. Untuk kasus sulit, tier Pro kami (segera) akan memakai ML juga.' },
+  ],
+  en: [
+    { q: 'How does it work?', a: '<strong>Free — 9 rule-based methods:</strong> AI phrases (70+ patterns), burstiness, lexical diversity, word entropy, ChatGPT/Claude/Gemini styles, visual patterns, and structure analysis.<br><br><strong>Pro (coming) — ML model:</strong> <em>Deep Analysis</em> uses a machine learning model trained specifically for AI detection, more accurate for borderline cases.<br><br>All Free tier runs 100% in your browser — text never leaves your device.' },
+    { q: 'What is an AI detector?', a: 'An AI detector analyzes writing for patterns typical of AI-generated text — like overused phrases, overly uniform sentence structure, or excessively formal style. The result is a probability, not an absolute verdict.' },
+    { q: 'How accurate is slopAI?', a: 'The free tier is ~80% accurate for obvious AI text, based on internal testing with 40 sample texts. But it can miss AI text edited by humans, and can false-positive on very formal human writing. Always use as an initial signal, not a final decision.' },
+    { q: 'Is my data sent to a server?', a: 'No. The free tier runs 100% in your browser — text never leaves your device. No account, no tracking.' },
+    { q: 'What languages are supported?', a: 'Indonesian and English are fully supported with 70+ patterns. Other languages can still be analyzed with statistical methods (burstiness, entropy, lexical diversity) but without specific phrase patterns.' },
+    { q: 'Why was my writing flagged as AI when I wrote it?', a: 'False positives can happen, especially for very formal, well-structured writing, or text with lots of technical terms. AI models are trained to mimic formal style, so formal human writing can look "AI". Try varying sentence length and adding personal touches.' },
+    { q: 'How is it different from other AI detectors?', a: 'Most AI detectors use server-side ML models — paid, your data sent to their servers, and require sign-up. slopAI free uses pattern + statistical analysis running 100% in your browser: more private, unlimited, no sign-up. For difficult cases, our Pro tier (coming) will use ML too.' },
+  ]
+};
+
+function setLang(lang) {
+  const t = I18N[lang] || I18N.id;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.innerHTML = t[key];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    if (t[key]) el.placeholder = t[key];
+  });
+  // FAQ
+  const faqItems = document.querySelectorAll('.faq-item');
+  const faqData = FAQ_I18N[lang] || FAQ_I18N.id;
+  faqItems.forEach((item, i) => {
+    if (faqData[i]) {
+      item.querySelector('summary').textContent = faqData[i].q;
+      item.querySelector('.faq-answer').innerHTML = faqData[i].a;
+    }
+  });
+  // Update toggle button + html lang
+  document.getElementById('langToggle').textContent = lang === 'id' ? 'EN' : 'ID';
+  document.documentElement.lang = lang;
+  localStorage.setItem('slopai-lang', lang);
+}
+
+(function() {
+  const saved = localStorage.getItem('slopai-lang') || 'id';
+  // Apply after DOM ready (script at end of body, so immediate)
+  setLang(saved);
+  document.getElementById('langToggle').addEventListener('click', () => {
+    const current = localStorage.getItem('slopai-lang') || 'id';
+    setLang(current === 'id' ? 'en' : 'id');
+  });
+})();
 </script>
 </body>
 </html>
