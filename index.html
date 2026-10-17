@@ -37,7 +37,7 @@ body {
 }
 .container { max-width: 720px; margin: 0 auto; padding: 0 1.25rem 4rem; }
 
-/* Sapling-style: clean top nav */
+/* Clean top nav */
 .topnav {
   display: flex; align-items: center; justify-content: space-between;
   padding: 1rem 0; border-bottom: 1px solid var(--border);
@@ -69,7 +69,7 @@ body {
 [data-theme="dark"] .theme-toggle #icon-sun { display: block; }
 [data-theme="dark"] .theme-toggle #icon-moon { display: none; }
 
-/* Sapling-style: simple page head, no drama */
+/* Simple page head */
 .page-head {
   margin-bottom: 1.75rem;
 }
@@ -245,7 +245,7 @@ textarea:focus, #urlInput:focus {
   color: var(--fail); font-size: 0.93rem;
 }
 
-/* Sapling-style fake meter */
+/* Probability meter */
 .fake-meter {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 1.75rem 2rem;
@@ -391,7 +391,7 @@ textarea:focus, #urlInput:focus {
   .fake-meter, .finding { break-inside: avoid; }
 }
 
-/* Sapling-style sentence highlight: red -> peach -> clean */
+/* Sentence highlight */
 .sent-text {
   line-height: 2.1; font-size: 0.97rem;
   margin-top: 0.75rem;
@@ -570,8 +570,8 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
   </details>
 
   <details class="faq-item">
-    <summary>Apa bedanya dengan GPTZero / Sapling / Originality?</summary>
-    <div class="faq-answer">Mereka pakai model ML di server (bayar, data dikirim ke server mereka). slopAI gratis pakai analisis pola + statistik yang jalan di browser — lebih privat, tanpa batas, tanpa daftar. Untuk kasus sulit, tier Pro kami (segera) akan pakai ML juga.</div>
+    <summary>Apa bedanya dengan tool deteksi AI lain?</summary>
+    <div class="faq-answer">Kebanyakan tool deteksi AI pakai model ML di server — berbayar, data Anda dikirim ke server mereka, dan harus daftar. slopAI gratis memakai analisis pola + statistik yang berjalan 100% di browser: lebih privat, tanpa batas, tanpa daftar. Untuk kasus sulit, tier Pro kami (segera) akan memakai ML juga.</div>
   </details>
 </div>
 
@@ -800,7 +800,7 @@ function analyze(text) {
     });
   }
 
-  // 7. Burstiness — variasi panjang kalimat (ala GPTZero)
+  // 7. Burstiness — variasi panjang kalimat
   // Manusia: campuran kalimat pendek & panjang. AI: cenderung seragam.
   const sentences = text.split(/[.!?…]+/).map(s => s.trim()).filter(s => s.split(/\s+/).length >= 3);
   if (sentences.length >= 5) {
@@ -1249,7 +1249,7 @@ function runAnalysis(text) {
   }
   const v = verdict(r.score);
 
-  // Sapling-style: Fake meter sebagai hero hasil
+  // Probability meter sebagai hero hasil
   let html = renderFakeMeter(r.score, v.label, v.desc);
 
   // Detail temuan
@@ -1431,7 +1431,7 @@ function renderSentenceHighlight(text) {
   return html;
 }
 
-// Sapling-style "Fake" meter
+// Probability meter
 function renderFakeMeter(score, verdictLabel, verdictDesc) {
   const color = score >= 70 ? 'var(--fail)' : score >= 40 ? 'var(--warn)' : 'var(--pass)';
   return '<div class="fake-meter">'
