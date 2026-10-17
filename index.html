@@ -315,6 +315,45 @@ textarea:focus, #urlInput:focus {
 .history-score { font-size: 1.4rem; font-weight: 800; }
 .history-empty { color: var(--muted); font-size: 0.9rem; padding: 1rem 0; }
 
+/* Sample dropdown menu */
+.sample-menu {
+  position: absolute; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 0.4rem; z-index: 100; min-width: 220px;
+}
+.sample-menu button {
+  display: block; width: 100%; text-align: left;
+  padding: 0.6rem 0.9rem; border: none; border-radius: 6px;
+  background: transparent; cursor: pointer;
+  font-size: 0.88rem; color: var(--text);
+}
+.sample-menu button:hover { background: var(--accent-soft); }
+.sample-menu button small {
+  display: block; color: var(--muted); font-size: 0.75rem;
+}
+
+/* FAQ */
+.faq-section { margin-top: 3rem; }
+.faq-section h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+.faq-item {
+  border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 0.6rem; overflow: hidden;
+}
+.faq-item summary {
+  padding: 0.9rem 1.1rem; cursor: pointer;
+  font-weight: 600; font-size: 0.92rem; list-style: none;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: '+'; float: right; color: var(--accent); font-weight: 700;
+}
+.faq-item[open] summary::after { content: '−'; }
+.faq-item .faq-answer {
+  padding: 0 1.1rem 1rem; font-size: 0.88rem;
+  color: var(--muted); line-height: 1.7;
+}
+
 /* Pro modal */
 .pro-modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,0.5);
@@ -474,7 +513,7 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
 <div id="textMode">
   <textarea id="input" placeholder="Tempel teks di sini untuk dianalisis..."></textarea>
-  <div class="char-count"><span id="charCount">0</span> karakter</div>
+  <div class="char-count"><span id="charCount">0</span> karakter · <span id="wordCount">0</span> kata</div>
 </div>
 
 <div id="urlMode">
@@ -484,11 +523,48 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
 <div class="btn-row">
   <button class="btn btn-primary" id="analyzeBtn">Analisis</button>
-  <button class="btn btn-ghost" id="sampleBtn">Contoh</button>
+  <button class="btn btn-ghost" id="sampleBtn">Contoh ▾</button>
+  <button class="btn btn-ghost" id="uploadBtn">📎 File</button>
+  <input type="file" id="fileInput" accept=".txt,.md" style="display:none">
   <button class="btn btn-ghost" id="clearBtn">Hapus</button>
 </div>
+<div id="sampleMenu" class="sample-menu" style="display:none"></div>
 
 <div id="result"></div>
+
+<div class="faq-section">
+  <h2>Pertanyaan umum</h2>
+
+  <details class="faq-item">
+    <summary>Apa itu AI detector?</summary>
+    <div class="faq-answer">AI detector menganalisis tulisan untuk mencari pola yang khas dari teks buatan AI — seperti frase yang overused, struktur kalimat yang terlalu seragam, atau gaya penulisan yang terlalu formal. Hasilnya berupa probabilitas, bukan vonis mutlak.</div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Seberapa akurat slopAI?</summary>
+    <div class="faq-answer">Tier gratis akurat ~80% untuk teks AI yang obvious. Tapi bisa miss jika teks AI sudah diedit manusia, dan bisa false positive untuk tulisan manusia yang sangat formal. Selalu gunakan sebagai sinyal awal, bukan keputusan final.</div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Apakah data saya dikirim ke server?</summary>
+    <div class="faq-answer">Tidak. Tier gratis berjalan 100% di browser Anda — teks tidak pernah meninggalkan perangkat. Tidak ada akun, tidak ada tracking.</div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Bahasa apa saja yang didukung?</summary>
+    <div class="faq-answer">Indonesia dan Inggris didukung penuh dengan 70+ pola khusus. Bahasa lain tetap bisa dianalisis dengan metode statistik (burstiness, entropi, lexical diversity) tapi tanpa pola frase spesifik.</div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Kenapa tulisan saya ke-detect AI padahal saya yang nulis?</summary>
+    <div class="faq-answer">False positive bisa terjadi, terutama untuk tulisan yang sangat formal, terstruktur rapi, atau menggunakan banyak istilah teknis. Model AI dilatih meniru gaya formal, jadi gaya formal manusia bisa terlihat "AI". Coba variasikan panjang kalimat dan tambahkan sentuhan personal.</div>
+  </details>
+
+  <details class="faq-item">
+    <summary>Apa bedanya dengan GPTZero / Sapling / Originality?</summary>
+    <div class="faq-answer">Mereka pakai model ML di server (bayar, data dikirim ke server mereka). slopAI gratis pakai analisis pola + statistik yang jalan di browser — lebih privat, tanpa batas, tanpa daftar. Untuk kasus sulit, tier Pro kami (segera) akan pakai ML juga.</div>
+  </details>
+</div>
 
 <footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--muted);line-height:1.7">
   <div id="how">
@@ -624,6 +700,33 @@ const SAMPLE_SLOP = `In today's fast-paced digital world, it's important to note
 Furthermore, companies that embark on this journey will unleash unprecedented potential. Additionally, it's worth noting that the seamless integration of AI is crucial for staying competitive.
 
 In conclusion, overall, the pivotal role of AI cannot be overstated. Let's delve into this ever-evolving realm together!`;
+
+const SAMPLES = {
+  ai_en: {
+    label: 'Teks AI (Inggris)',
+    text: SAMPLE_SLOP
+  },
+  ai_id: {
+    label: 'Teks AI (Indonesia)',
+    text: `Di era digital yang serba cepat ini, penting untuk dicatat bahwa kecerdasan buatan telah menjadi game-changer bagi berbagai industri. Selain itu, transformasi digital yang komprehensif menciptakan lanskap peluang yang sangat luas.
+
+Perlu digarisbawahi bahwa perusahaan yang mengadopsi teknologi ini akan merasakan dampak yang signifikan. Dalam konteks yang lebih luas, hal ini menunjukkan bahwa inovasi adalah kunci utama untuk tetap kompetitif.
+
+Sebagai kesimpulan, secara keseluruhan, peran penting AI tidak dapat diremehkan. Mari kita telusuri lebih dalam dunia yang terus berkembang ini bersama-sama!`
+  },
+  human_id: {
+    label: 'Tulisan manusia (Indonesia)',
+    text: `Kemarin sore hujan deras banget di Jakarta. Jalanan banjir, motor gue mogok di tengah jalan TB Simatupang. Untung ada warteg masih buka, jadi neduh sambil makan.
+
+Abang wartegnya cerita soal anaknya yang baru masuk SMP, pusing mikirin biaya. Kita ngobrol ngalor-ngidul sampe hujan reda jam 8 malem. Kadang momen random kayak gitu justru yang paling berkesan — nggak direncanain, tapi nempel di kepala.`
+  },
+  human_en: {
+    label: 'Human writing (English)',
+    text: `I woke up late again. The coffee machine was acting up — third time this week. Ended up grabbing a stale croissant from the corner shop and sprinting to the bus.
+
+My boss didn't even notice I was 20 minutes late. Small wins, I guess. The afternoon dragged on forever, but at least the AC was working for once.`
+  }
+};
 
 function analyze(text) {
   const findings = [];
@@ -1050,13 +1153,70 @@ async function fetchUrlText(url) {
 const input = document.getElementById('input');
 const result = document.getElementById('result');
 const charCount = document.getElementById('charCount');
-
-input.addEventListener('input', () => charCount.textContent = input.value.length.toLocaleString('id-ID'));
+const wordCountEl = document.getElementById('wordCount');
+function updateWordCount() {
+  const words = input.value.split(/\s+/).filter(w => w.length).length;
+  charCount.textContent = input.value.length.toLocaleString('id-ID');
+  wordCountEl.textContent = words.toLocaleString('id-ID');
+}
+input.addEventListener('input', updateWordCount);
 document.getElementById('clearBtn').addEventListener('click', () => {
-  input.value = ''; charCount.textContent = '0'; result.style.display = 'none';
+  input.value = ''; charCount.textContent = '0'; wordCountEl.textContent = '0'; result.style.display = 'none';
 });
-document.getElementById('sampleBtn').addEventListener('click', () => {
-  input.value = SAMPLE_SLOP; charCount.textContent = SAMPLE_SLOP.length.toLocaleString('id-ID');
+document.getElementById('sampleBtn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const menu = document.getElementById('sampleMenu');
+  if (menu.style.display === 'none') {
+    let html = '';
+    const descs = {
+      ai_en: 'Contoh teks AI yang obvious',
+      ai_id: 'Contoh teks AI bahasa Indonesia',
+      human_id: 'Tulisan manusia kasual',
+      human_en: 'Casual human writing'
+    };
+    Object.keys(SAMPLES).forEach(key => {
+      html += '<button data-sample="' + key + '">' + SAMPLES[key].label
+        + '<small>' + descs[key] + '</small></button>';
+    });
+    menu.innerHTML = html;
+    menu.style.display = 'block';
+    // Position below button
+    const btn = document.getElementById('sampleBtn');
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+    menu.style.left = (rect.left + window.scrollX) + 'px';
+    menu.querySelectorAll('button').forEach(b => {
+      b.addEventListener('click', () => {
+        const s = SAMPLES[b.dataset.sample];
+        input.value = s.text;
+        charCount.textContent = s.text.length.toLocaleString('id-ID');
+        updateWordCount();
+        menu.style.display = 'none';
+      });
+    });
+  } else {
+    menu.style.display = 'none';
+  }
+});
+document.addEventListener('click', () => {
+  document.getElementById('sampleMenu').style.display = 'none';
+});
+
+// File upload (.txt, .md)
+document.getElementById('uploadBtn').addEventListener('click', () => {
+  document.getElementById('fileInput').click();
+});
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    input.value = ev.target.result.slice(0, 50000); // max 50k chars
+    charCount.textContent = input.value.length.toLocaleString('id-ID');
+    updateWordCount();
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 });
 
 document.getElementById('analyzeBtn').addEventListener('click', async () => {
