@@ -161,6 +161,35 @@ textarea:focus, #urlInput:focus {
   color: var(--fail); font-size: 0.93rem;
 }
 
+/* Sentence highlight */
+.sent-highlight-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.sent-highlight-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.15rem; }
+.sent-text {
+  line-height: 2; font-size: 0.95rem;
+  margin-top: 0.75rem; text-align: justify;
+}
+.sent {
+  border-radius: 4px; padding: 1px 3px;
+  transition: background 0.2s; cursor: default;
+}
+.sent.s0 { background: transparent; }
+.sent.s1 { background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.sent.s2 { background: color-mix(in srgb, var(--warn) 25%, transparent); }
+.sent.s3 { background: color-mix(in srgb, var(--fail) 18%, transparent); }
+.sent.s4 { background: color-mix(in srgb, var(--fail) 35%, transparent); }
+.hl-legend {
+  display: flex; gap: 1rem; margin-top: 0.75rem;
+  font-size: 0.78rem; color: var(--muted); flex-wrap: wrap;
+}
+.hl-legend i {
+  display: inline-block; width: 12px; height: 12px;
+  border-radius: 3px; margin-right: 0.3rem; vertical-align: baseline;
+}
+
 /* Visualizations */
 .viz-section {
   background: var(--surface); border: 1px solid var(--border);
@@ -692,11 +721,56 @@ function runAnalysis(text) {
   }
 
   // Visualizations
+  html += renderSentenceHighlight(text);
   html += renderWordFreq(r.topWords || []);
   html += renderSentenceViz(r.sentLens || []);
 
   result.innerHTML = html;
   result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ===== SENTENCE-LEVEL HIGHLIGHT =====
+function scoreSentence(sent) {
+  let s = 0;
+  // Slop phrases dalam kalimat ini
+  SLOP_PHRASES.forEach(({ p, w }) => {
+    const m = sent.match(new RegExp(p.source, 'gi'));
+    if (m) s += w * m.length;
+  });
+  // Emoji
+  const emojis = sent.match(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu) || [];
+  s += emojis.length * 5;
+  // Tanda seru
+  s += (sent.match(/!/g) || []).length * 4;
+  // Hook bombastis
+  if (/^(i was (shocked|stunned)|nobody talks about|unpopular opinion|here'?s the (truth|thing))/i.test(sent.trim())) s += 10;
+  // CAPS
+  s += ((sent.match(/\b[A-Z]{4,}\b/g) || []).length * 3);
+  // Hashtag
+  s += ((sent.match(/#\w+/g) || []).length * 3);
+  return s;
+}
+
+function renderSentenceHighlight(text) {
+  const rawSents = text.match(/[^.!?…]+[.!?…]+[""''\)\]]?|\S[^.!?…]*$/g) || [];
+  const sents = rawSents.map(s => s.trim()).filter(s => s.length > 5);
+  if (sents.length < 2) return '';
+
+  let html = '<div class="sent-highlight-section"><h3>Highlight per kalimat</h3>'
+    + '<p class="viz-desc">Warna menunjukkan tingkat indikasi AI per kalimat — semakin merah, semakin mencurigakan.</p>'
+    + '<div class="sent-text">';
+  sents.forEach(sent => {
+    const score = scoreSentence(sent);
+    const level = score >= 20 ? 's4' : score >= 12 ? 's3' : score >= 6 ? 's2' : score >= 3 ? 's1' : 's0';
+    html += '<span class="sent ' + level + '" title="skor: ' + score + '">' + escapeHtml(sent) + '</span> ';
+  });
+  html += '</div><div class="hl-legend">'
+    + '<span><i style="background:transparent;border:1px solid var(--border)"></i>Bersih</span>'
+    + '<span><i style="background:color-mix(in srgb, var(--warn) 20%, transparent)"></i>Ringan</span>'
+    + '<span><i style="background:color-mix(in srgb, var(--fail) 25%, transparent)"></i>Sedang</span>'
+    + '<span><i style="background:color-mix(in srgb, var(--fail) 40%, transparent)"></i>Tinggi</span>'
+    + '</div></div>';
+  return html;
 }
 
 // ===== VISUALIZATIONS =====
