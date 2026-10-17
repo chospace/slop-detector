@@ -294,7 +294,22 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
 <footer>
   <div class="disclaimer">
-    Deteksi berbasis pola linguistik, bukan model AI. Skor adalah estimasi — teks natural yang rapi dapat lolos, pola AI yang jelas akan terdeteksi.
+    <strong style="color:var(--text)">Seberapa bisa dipercaya?</strong><br>
+    Tool ini mendeteksi <em>pola</em>, bukan membuktikan asal teks. Skor tinggi = banyak pola AI, bukan vonis "ini 100% AI".
+    Tulisan manusia yang formal bisa ke-flag; AI yang diedit manusia bisa lolos.
+    Gunakan sebagai <em>sinyal awal</em>, bukan keputusan final.
+    <br><br>
+    <details style="margin-top:0.5rem">
+      <summary style="cursor:pointer;color:var(--accent);font-weight:600">Lihat metodologi</summary>
+      <div style="margin-top:0.75rem;font-size:0.82rem;line-height:1.7">
+        <strong>1. Frase khas AI</strong> — 70+ pola kata/frasa yang overused oleh model bahasa (ID + EN).<br>
+        <strong>2. Burstiness</strong> — variasi panjang kalimat. Manusia bervariasi, AI cenderung seragam.<br>
+        <strong>3. Lexical diversity</strong> — rasio kata unik. AI cenderung repetitif.<br>
+        <strong>4. Pola visual</strong> — hook bombastis, emoji/CTA/hashtag spam, paragraf 1 kalimat.<br>
+        <strong>5. Struktur</strong> — dominasi list, enumerasi kaku, paragraf repetitif.<br><br>
+        Semua berjalan 100% di browser Anda — teks tidak dikirim ke server manapun.
+      </div>
+    </details>
   </div>
   <div>Dibuat oleh <a href="https://chospace.github.io">chospace</a></div>
 </footer>
@@ -350,6 +365,34 @@ const SLOP_PHRASES = [
   { p: /memainkan peran (penting|krusial)/i, w: 6, label: 'memainkan peran penting' },
   { p: /menjadi game-?changer/i, w: 8, label: 'game-changer' },
   { p: /\blanskap\b/i, w: 5, label: 'lanskap' },
+  // Indonesian - tambahan pola khas AI (batch 2)
+  { p: /dalam konteks\b/i, w: 4, label: '"dalam konteks"' },
+  { p: /hal ini menunjukkan (bahwa|adanya)/i, w: 6, label: '"hal ini menunjukkan bahwa"' },
+  { p: /dapat disimpulkan (bahwa|)/i, w: 6, label: '"dapat disimpulkan"' },
+  { p: /perlu digarisbawahi/i, w: 7, label: '"perlu digarisbawahi"' },
+  { p: /patut dicatat/i, w: 6, label: '"patut dicatat"' },
+  { p: /sebagai contoh\b/i, w: 3, label: '"sebagai contoh"' },
+  { p: /dengan kata lain\b/i, w: 4, label: '"dengan kata lain"' },
+  { p: /lebih lanjut\b/i, w: 4, label: '"lebih lanjut"' },
+  { p: /di sisi lain\b/i, w: 4, label: '"di sisi lain"' },
+  { p: /meskipun demikian\b/i, w: 5, label: '"meskipun demikian"' },
+  { p: /oleh karena itu\b/i, w: 5, label: '"oleh karena itu"' },
+  { p: /berdasarkan (data|informasi|hasil)/i, w: 4, label: '"berdasarkan data…"' },
+  { p: /penting bagi .* untuk memahami/i, w: 6, label: '"penting bagi… untuk memahami"' },
+  { p: /tidak hanya .* tetapi juga/i, w: 5, label: '"tidak hanya… tetapi juga"' },
+  { p: /baik .* maupun\b/i, w: 4, label: '"baik… maupun"' },
+  { p: /semakin .* semakin\b/i, w: 4, label: '"semakin… semakin"' },
+  { p: /dalam upaya\b/i, w: 5, label: '"dalam upaya"' },
+  { p: /guna (mencapai|memastikan|meningkatkan)/i, w: 5, label: '"guna…" (formal AI)' },
+  { p: /adapun\b/i, w: 4, label: '"adapun" (kaku)' },
+  { p: /kendati\b/i, w: 5, label: '"kendati" (kaku)' },
+  { p: /niscaya\b/i, w: 6, label: '"niscaya" (kaku)' },
+  { p: /implikasi\b/i, w: 4, label: '"implikasi"' },
+  { p: /komprehensif\b/i, w: 5, label: '"komprehensif"' },
+  { p: /holistik\b/i, w: 6, label: '"holistik"' },
+  { p: /optimalisasi\b/i, w: 5, label: '"optimalisasi"' },
+  { p: /efektivitas\b/i, w: 4, label: '"efektivitas"' },
+  { p: /pemberdayaan\b/i, w: 5, label: '"pemberdayaan"' },
 ];
 
 const SAMPLE_SLOP = `In today's fast-paced digital world, it's important to note that leveraging artificial intelligence is a game-changer for businesses. Moreover, this vibrant tapestry of innovation creates a multifaceted landscape of opportunities.
