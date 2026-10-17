@@ -551,7 +551,7 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
   <details class="faq-item">
     <summary>Seberapa akurat slopAI?</summary>
-    <div class="faq-answer">Tier gratis akurat ~80% untuk teks AI yang obvious. Tapi bisa miss jika teks AI sudah diedit manusia, dan bisa false positive untuk tulisan manusia yang sangat formal. Selalu gunakan sebagai sinyal awal, bukan keputusan final.</div>
+    <div class="faq-answer">Tier gratis akurat ~80% untuk teks AI yang obvious, berdasarkan pengujian internal dengan 40 sampel teks. Tapi bisa miss jika teks AI sudah diedit manusia, dan bisa false positive untuk tulisan manusia yang sangat formal. Selalu gunakan sebagai sinyal awal, bukan keputusan final.</div>
   </details>
 
   <details class="faq-item">
@@ -1051,21 +1051,21 @@ function analyze(text) {
 }
 
 function verdict(score) {
-  if (score >= 70) return {
+  if (score >= 60) return {
     label: 'Kemungkinan besar AI',
     desc: 'Teks ini menunjukkan banyak pola penulisan khas AI. Sangat disarankan untuk ditinjau ulang.',
     banner: 'danger', icon: '🤖',
     color: 'var(--fail)',
     tip: '<strong>Saran:</strong> tulis ulang dengan sudut pandang pribadi — pengalaman konkret, opini spesifik, dan diksi sehari-hari.'
   };
-  if (score >= 40) return {
+  if (score >= 25) return {
     label: 'Indikasi AI sedang',
     desc: 'Beberapa pola AI terdeteksi. Layak untuk diperiksa lebih lanjut.',
     banner: 'warning', icon: '⚠️',
     color: 'var(--warn)',
     tip: '<strong>Saran:</strong> ganti frasa yang ditandai dengan bahasa yang lebih natural dan spesifik.'
   };
-  if (score >= 15) return {
+  if (score >= 10) return {
     label: 'Indikasi AI ringan',
     desc: 'Hanya sedikit pola yang terdeteksi. Kemungkinan besar ditulis manusia.',
     banner: 'warning', icon: '👀',
@@ -1433,7 +1433,7 @@ function renderSentenceHighlight(text) {
 
 // Probability meter
 function renderFakeMeter(score, verdictLabel, verdictDesc) {
-  const color = score >= 70 ? 'var(--fail)' : score >= 40 ? 'var(--warn)' : 'var(--pass)';
+  const color = score >= 60 ? 'var(--fail)' : score >= 10 ? 'var(--warn)' : 'var(--pass)';
   return '<div class="fake-meter">'
     + '<div class="fake-meter-top">'
     + '<span class="fake-label">Probabilitas AI</span>'
