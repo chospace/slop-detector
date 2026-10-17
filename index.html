@@ -476,6 +476,63 @@ function analyze(text) {
   // 10. Sentence lengths (for visualization, not scored)
   const sentLens = sentences.map(s => s.split(/\s+/).length);
 
+  // 11. LinkedIn-style slop patterns (visual formatting)
+  const linkedInFindings = [];
+
+  // 11a. Hook bombastis di kalimat pembuka
+  const hookPatterns = [
+    /^(i was (shocked|stunned|amazed)|nobody talks about|unpopular opinion|hot take|here'?s the (truth|thing|secret)|stop (doing|scrolling)|this (changed|will change) everything|imagine (this|waking up))/i,
+    /^(gue|gua|aku) (kaget|syok|nggak nyangka)/i,
+    /^(fakta (mencengangkan|yang jarang|tidak banyak)|opini tak populer|berhenti (melakukan|scroll))/i,
+  ];
+  const firstLine = text.split('\n').filter(l => l.trim())[0] || '';
+  if (hookPatterns.some(p => p.test(firstLine.trim()))) {
+    slopScore += 10;
+    linkedInFindings.push('hook bombastis di kalimat pembuka');
+  }
+
+  // 11b. Single-sentence paragraphs berlebihan (line break tiap kalimat)
+  const allParas = text.split(/\n\s*\n/).filter(p => p.trim());
+  if (allParas.length >= 5) {
+    const singleSentParas = allParas.filter(p => {
+      const sents = p.split(/[.!?…]+/).filter(s => s.trim().length > 5);
+      return sents.length === 1 && p.trim().split(/\s+/).length <= 25;
+    });
+    if (singleSentParas.length / allParas.length > 0.6) {
+      slopScore += 12;
+      linkedInFindings.push(Math.round(singleSentParas.length / allParas.length * 100) + '% paragraf hanya 1 kalimat');
+    }
+  }
+
+  // 11c. CTA follow/repost khas LinkedIn
+  if (/(follow me|connect with me|repost (this|to)|share this|tag someone|comment (below|your)|ikuti saya|bagikan (ini|ke)|tag teman)/i.test(text)) {
+    slopScore += 8;
+    linkedInFindings.push('CTA follow/share khas sosmed');
+  }
+
+  // 11d. Hashtag spam
+  const hashtags = text.match(/#\w+/g) || [];
+  if (hashtags.length >= 5) {
+    slopScore += Math.min(10, hashtags.length);
+    linkedInFindings.push(hashtags.length + ' hashtag');
+  }
+
+  // 11e. CAPS LOCK berlebihan
+  const capsWords = (text.match(/\b[A-Z]{4,}\b/g) || []).filter(w => !/^(AI|URL|API|HTML|CTA|SEO)$/.test(w));
+  if (capsWords.length >= 3) {
+    slopScore += Math.min(10, capsWords.length * 2);
+    linkedInFindings.push(capsWords.length + ' kata CAPS LOCK');
+  }
+
+  if (linkedInFindings.length) {
+    findings.push({
+      level: linkedInFindings.length >= 3 ? 'high' : 'med',
+      name: 'Pola visual khas konten AI',
+      desc: 'Format penulisan yang umum pada konten generate-an massal.',
+      hits: linkedInFindings
+    });
+  }
+
   return { score: slopScore, findings, words, topWords, sentLens };
 }
 
