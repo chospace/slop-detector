@@ -16,17 +16,17 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
 :root {
-  --bg: #fafafa; --surface: #ffffff; --text: #111827; --muted: #6b7280;
-  --border: #e5e7eb; --accent: #f59e0b; --accent-soft: #fffbeb;
+  --bg: #ffffff; --surface: #f8fafc; --text: #0f172a; --muted: #64748b;
+  --border: #e2e8f0; --accent: #2563eb; --accent-soft: #eff6ff;
   --pass: #059669; --pass-bg: #ecfdf5;
   --warn: #d97706; --warn-bg: #fffbeb;
   --fail: #dc2626; --fail-bg: #fef2f2;
-  --radius: 12px;
+  --radius: 8px;
 }
-/* Dark mode hanya jika user eksplisit pilih */
+/* Dark mode via toggle */
 [data-theme="dark"] {
-  --bg: #0f1115; --surface: #1a1d24; --text: #e5e7eb; --muted: #9ca3af;
-  --border: #2e323b; --accent: #fbbf24; --accent-soft: #2a2111;
+  --bg: #0f172a; --surface: #1e293b; --text: #f1f5f9; --muted: #94a3b8;
+  --border: #334155; --accent: #60a5fa; --accent-soft: #1e3a5f;
   --pass-bg: #052e22; --warn-bg: #3a2a0a; --fail-bg: #3a0d0d;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -37,68 +37,54 @@ body {
 }
 .container { max-width: 720px; margin: 0 auto; padding: 0 1.25rem 4rem; }
 
-/* Hero */
-.hero {
-  text-align: center; padding: 4rem 0 3rem;
-  position: relative; overflow: hidden;
+/* Sapling-style: clean top nav */
+.topnav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 0; border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
 }
-.hero::before {
-  content: ''; position: absolute; top: -100px; left: 50%;
-  transform: translateX(-50%); width: 500px; height: 300px;
-  background: radial-gradient(ellipse, var(--accent-soft) 0%, transparent 70%);
-  opacity: 0.6; pointer-events: none;
+.topnav .brand {
+  font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;
+  text-decoration: none; color: var(--text);
 }
-.logo {
-  font-size: 2.75rem; font-weight: 800; letter-spacing: -0.03em;
-  margin-bottom: 0.25rem; line-height: 1;
+.topnav .brand .logo-ai { color: var(--accent); }
+.topnav .nav-links {
+  display: flex; gap: 1.5rem; font-size: 0.88rem; align-items: center;
 }
-.logo-text {
-  font-size: 3rem; font-weight: 800; letter-spacing: -0.03em;
-  margin-bottom: 0.25rem; line-height: 1;
+.topnav .nav-links a {
+  color: var(--muted); text-decoration: none;
 }
-.logo-text .logo-ai {
-  color: #f59e0b;
+.topnav .nav-links a:hover { color: var(--text); }
+/* Theme toggle ala PaperMod: tombol icon */
+.theme-toggle {
+  background: transparent; border: none; cursor: pointer;
+  padding: 6px; border-radius: 8px; line-height: 0;
+  color: var(--muted); transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
 }
-[data-theme="dark"] .logo-text .logo-ai { color: #fbbf24; }
-.tagline {
-  font-size: 0.95rem; color: var(--muted); font-weight: 500;
-  margin-bottom: 1rem;
+.theme-toggle:hover { color: var(--text); background: var(--surface); }
+.theme-toggle svg { width: 20px; height: 20px; }
+.theme-toggle #icon-sun { display: none; }
+.theme-toggle #icon-moon { display: block; }
+[data-theme="dark"] .theme-toggle #icon-sun { display: block; }
+[data-theme="dark"] .theme-toggle #icon-moon { display: none; }
+
+/* Sapling-style: simple page head, no drama */
+.page-head {
+  margin-bottom: 1.75rem;
 }
-.hero h1 {
-  font-size: 2.75rem; font-weight: 800; letter-spacing: -0.03em;
-  line-height: 1.1; margin-bottom: 1rem;
-}
-.hero h1 .grad {
-  background: linear-gradient(135deg, var(--accent), #d4a017);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.hero p {
-  color: var(--muted); font-size: 1.1rem; max-width: 520px;
-  margin: 0 auto 2rem; line-height: 1.7;
-}
-.hero-stats {
-  display: flex; justify-content: center; gap: 2.5rem;
+.page-head h1 {
+  font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em;
   margin-bottom: 0.5rem;
 }
-.free-badge { margin: 0 auto 1.75rem; }
-.free-pill {
-  display: inline-block; font-size: 0.85rem; font-weight: 800;
-  letter-spacing: 0.12em; padding: 0.5rem 1.25rem;
-  background: linear-gradient(135deg, var(--pass), #10b981);
-  color: #fff; border-radius: 99px;
-  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+.page-head p {
+  color: var(--muted); font-size: 1rem; line-height: 1.6;
+  max-width: 600px;
 }
-.free-sub {
-  display: block; margin-top: 0.6rem;
-  font-size: 0.88rem; color: var(--muted);
+.free-note {
+  display: inline-block; margin-top: 0.75rem;
+  font-size: 0.82rem; color: var(--pass); font-weight: 600;
 }
-.hero-stat { text-align: center; }
-.hero-stat .num {
-  font-size: 1.5rem; font-weight: 800; color: var(--text);
-  font-variant-numeric: tabular-nums;
-}
-.hero-stat .lbl { font-size: 0.78rem; color: var(--muted); }
 
 /* Verdict banner */
 .verdict-banner {
@@ -156,7 +142,7 @@ textarea, #urlInput {
   background: var(--surface); color: var(--text);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-textarea { min-height: 220px; resize: vertical; }
+textarea { min-height: 280px; resize: vertical; line-height: 1.7; }
 textarea:focus, #urlInput:focus {
   outline: none; border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
@@ -391,20 +377,22 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 <body>
 <div class="container">
 
-<div class="hero">
-  <div class="logo-text">slop<span class="logo-ai">AI</span></div>
-  <div class="tagline">Detektor tulisan AI — gratis, tanpa daftar</div>
-  <h1>Tulisan ini <span class="grad">bau AI</span> nggak sih?</h1>
-  <p>Tempel teks atau masukkan URL. Kami analisis 70+ pola linguistik, ritme kalimat, dan struktur visual — lalu kasih tahu seberapa besar kemungkinan teks ini hasil generate AI.</p>
-  <div class="free-badge">
-    <span class="free-pill">100% GRATIS</span>
-    <span class="free-sub">Tanpa daftar · Tanpa batas · Tanpa iklan</span>
+<nav class="topnav">
+  <a href="#" class="brand">slop<span class="logo-ai">AI</span></a>
+  <div class="nav-links">
+    <a href="#how">Cara kerja</a>
+    <a href="https://chospace.github.io">chospace</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Ganti tema" title="Ganti tema (Alt+T)" accesskey="t">
+      <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
   </div>
-  <div class="hero-stats">
-    <div class="hero-stat"><div class="num">70+</div><div class="lbl">Pola terdeteksi</div></div>
-    <div class="hero-stat"><div class="num">8</div><div class="lbl">Metode analisis</div></div>
-    <div class="hero-stat"><div class="num">0</div><div class="lbl">Rupiah</div></div>
-  </div>
+</nav>
+
+<div class="page-head">
+  <h1>Detektor Tulisan AI</h1>
+  <p>Tempel teks atau masukkan URL. Kami menganalisis pola linguistik, ritme kalimat, dan struktur penulisan untuk memperkirakan kemungkinan teks dibuat oleh AI.</p>
+  <span class="free-note">✓ Gratis · Tanpa daftar · 100% privat di browser</span>
 </div>
 
 <div class="mode-tabs">
@@ -430,52 +418,44 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
 <div id="result"></div>
 
-<footer>
-  <div class="disclaimer">
+<footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--muted);line-height:1.7">
+  <div id="how">
     <strong style="color:var(--text)">Seberapa bisa dipercaya?</strong><br>
-    Tool ini mendeteksi <em>pola</em>, bukan membuktikan asal teks. Skor tinggi = banyak pola AI, bukan vonis "ini 100% AI".
-    Tulisan manusia yang formal bisa ke-flag; AI yang diedit manusia bisa lolos.
+    Tool ini mendeteksi <em>pola</em>, bukan membuktikan asal teks. Skor tinggi = banyak pola AI, bukan vonis.
     Gunakan sebagai <em>sinyal awal</em>, bukan keputusan final.
-    <br><br>
     <details style="margin-top:0.5rem">
-      <summary style="cursor:pointer;color:var(--accent);font-weight:600">Lihat metodologi</summary>
-      <div style="margin-top:0.75rem;font-size:0.82rem;line-height:1.7">
-        <strong>1. Frase khas AI</strong> — 70+ pola kata/frasa yang overused oleh model bahasa (ID + EN).<br>
-        <strong>2. Burstiness</strong> — variasi panjang kalimat. Manusia bervariasi, AI cenderung seragam.<br>
-        <strong>3. Lexical diversity</strong> — rasio kata unik. AI cenderung repetitif.<br>
-        <strong>4. Pola visual</strong> — hook bombastis, emoji/CTA/hashtag spam, paragraf 1 kalimat.<br>
-        <strong>5. Struktur</strong> — dominasi list, enumerasi kaku, paragraf repetitif.<br><br>
-        Semua berjalan 100% di browser Anda — teks tidak dikirim ke server manapun.
+      <summary style="cursor:pointer;color:var(--accent);font-weight:600">Metodologi</summary>
+      <div style="margin-top:0.5rem">
+        Frase khas AI · Burstiness · Lexical diversity · Entropi kata · Pola visual · Gaya per-model (ChatGPT, Claude, Gemini).<br>
+        100% berjalan di browser — teks tidak dikirim ke server.
       </div>
     </details>
   </div>
-  <div>slopAI oleh <a href="https://chospace.github.io">chospace</a></div>
+  <div style="margin-top:1rem">slopAI oleh <a href="https://chospace.github.io" style="color:var(--muted)">chospace</a></div>
 </footer>
 
-<div style="margin-top:2.5rem;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">
-  <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;text-align:center">Kenapa slopAI?</h3>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;text-align:center;font-size:0.85rem">
-    <div>
-      <div style="font-size:1.5rem;margin-bottom:0.25rem">💰</div>
-      <strong>Gratis selamanya</strong><br>
-      <span style="color:var(--muted)">Kompetitor: $15–50/bulan</span>
-    </div>
-    <div>
-      <div style="font-size:1.5rem;margin-bottom:0.25rem">🔒</div>
-      <strong>100% privat</strong><br>
-      <span style="color:var(--muted)">Analisis di browser kamu</span>
-    </div>
-    <div>
-      <div style="font-size:1.5rem;margin-bottom:0.25rem">🇮🇩</div>
-      <strong>Bahasa Indonesia</strong><br>
-      <span style="color:var(--muted)">Pola lokal terdeteksi</span>
-    </div>
-  </div>
 </div>
 
 </div>
 
 <script>
+// ===== THEME TOGGLE =====
+(function() {
+  const root = document.documentElement;
+  const saved = localStorage.getItem('slopai-theme');
+  if (saved === 'dark') root.setAttribute('data-theme', 'dark');
+  document.getElementById('themeToggle').addEventListener('click', function() {
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    if (isDark) {
+      root.removeAttribute('data-theme');
+      localStorage.setItem('slopai-theme', 'light');
+    } else {
+      root.setAttribute('data-theme', 'dark');
+      localStorage.setItem('slopai-theme', 'dark');
+    }
+  });
+})();
+
 // ===== SLOP PATTERN DATABASE =====
 const SLOP_PHRASES = [
   { p: /\bdelve\b/i, w: 8, label: 'delve' },
@@ -1039,17 +1019,8 @@ function runAnalysis(text) {
   }
   const v = verdict(r.score);
 
-  // Sapling-style: Fake meter dulu sebagai hero hasil
+  // Sapling-style: Fake meter sebagai hero hasil
   let html = renderFakeMeter(r.score, v.label, v.desc);
-
-  // Share buttons
-  const shareText = encodeURIComponent('Skor AI: ' + r.score + '% — ' + v.label + ' via slopAI');
-  const shareUrl = encodeURIComponent('https://slop.ai.id');
-  html += '<div class="share-row"><span>Bagikan:</span>'
-    + '<a class="share-btn" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank">X</a>'
-    + '<a class="share-btn" href="https://wa.me/?text=' + shareText + '%20' + shareUrl + '" target="_blank">WhatsApp</a>'
-    + '<a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=' + shareUrl + '" target="_blank">LinkedIn</a>'
-    + '</div>';
 
   // Detail temuan
   html += '<div class="tip-box">' + v.tip + '</div>';
