@@ -243,33 +243,63 @@ textarea:focus, #urlInput:focus {
   color: var(--fail); font-size: 0.93rem;
 }
 
-/* Sentence highlight */
-.sent-highlight-section {
+/* Sapling-style fake meter */
+.fake-meter {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 1.25rem;
+  border-radius: var(--radius); padding: 1.75rem 2rem;
+  margin-bottom: 1.25rem; animation: slideIn 0.5s ease-out;
+}
+.fake-meter-top {
+  display: flex; justify-content: space-between; align-items: baseline;
   margin-bottom: 0.75rem;
 }
-.sent-highlight-section h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.15rem; }
+.fake-label { font-size: 0.85rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.fake-pct {
+  font-size: 2.5rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em; line-height: 1;
+}
+.fake-bar {
+  height: 14px; border-radius: 99px; background: var(--bg);
+  border: 1px solid var(--border); overflow: hidden; position: relative;
+}
+.fake-fill {
+  height: 100%; border-radius: 99px;
+  background: linear-gradient(90deg, var(--pass) 0%, var(--warn) 50%, var(--fail) 100%);
+  background-size: 200px 100%;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.fake-scale {
+  display: flex; justify-content: space-between;
+  font-size: 0.75rem; color: var(--muted); margin-top: 0.4rem;
+}
+.fake-verdict {
+  margin-top: 1rem; font-size: 0.95rem; color: var(--muted);
+}
+.fake-verdict strong { color: var(--text); }
+
+/* Sapling-style sentence highlight: red -> peach -> clean */
 .sent-text {
-  line-height: 2; font-size: 0.95rem;
-  margin-top: 0.75rem; text-align: justify;
+  line-height: 2.1; font-size: 0.97rem;
+  margin-top: 0.75rem;
 }
 .sent {
-  border-radius: 4px; padding: 1px 3px;
+  border-radius: 3px; padding: 2px 4px; margin: 0 1px;
   transition: background 0.2s; cursor: default;
+  border-bottom: 2px solid transparent;
 }
 .sent.s0 { background: transparent; }
-.sent.s1 { background: color-mix(in srgb, var(--warn) 12%, transparent); }
-.sent.s2 { background: color-mix(in srgb, var(--warn) 25%, transparent); }
-.sent.s3 { background: color-mix(in srgb, var(--fail) 18%, transparent); }
-.sent.s4 { background: color-mix(in srgb, var(--fail) 35%, transparent); }
+.sent.s1 { background: rgba(251, 191, 36, 0.15); border-bottom-color: rgba(251, 191, 36, 0.4); }
+.sent.s2 { background: rgba(251, 146, 60, 0.25); border-bottom-color: rgba(251, 146, 60, 0.5); }
+.sent.s3 { background: rgba(248, 113, 113, 0.30); border-bottom-color: rgba(248, 113, 113, 0.6); }
+.sent.s4 { background: rgba(220, 38, 38, 0.35); border-bottom-color: #dc2626; }
 .hl-legend {
-  display: flex; gap: 1rem; margin-top: 0.75rem;
+  display: flex; gap: 1rem; margin-top: 1rem;
   font-size: 0.78rem; color: var(--muted); flex-wrap: wrap;
+  align-items: center;
 }
 .hl-legend i {
-  display: inline-block; width: 12px; height: 12px;
-  border-radius: 3px; margin-right: 0.3rem; vertical-align: baseline;
+  display: inline-block; width: 28px; height: 10px;
+  border-radius: 3px; margin-right: 0.35rem; vertical-align: middle;
 }
 
 /* Visualizations */
@@ -935,15 +965,11 @@ function runAnalysis(text) {
   }
   const v = verdict(r.score);
 
-  // Dramatic verdict banner
-  let html = '<div class="verdict-banner ' + v.banner + '">'
-    + '<div class="verdict-icon">' + v.icon + '</div>'
-    + '<div class="verdict-text"><h2>' + v.label + ' — Skor ' + r.score + '/100</h2>'
-    + '<p>' + v.desc + '</p></div>'
-    + '</div>';
+  // Sapling-style: Fake meter dulu sebagai hero hasil
+  let html = renderFakeMeter(r.score, v.label, v.desc);
 
   // Share buttons
-  const shareText = encodeURIComponent('Skor slop: ' + r.score + '/100 — ' + v.label + ' via slop.ai.id');
+  const shareText = encodeURIComponent('Skor AI: ' + r.score + '% — ' + v.label + ' via slop.ai.id');
   const shareUrl = encodeURIComponent('https://slop.ai.id');
   html += '<div class="share-row"><span>Bagikan:</span>'
     + '<a class="share-btn" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank">X</a>'
@@ -951,14 +977,8 @@ function runAnalysis(text) {
     + '<a class="share-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=' + shareUrl + '" target="_blank">LinkedIn</a>'
     + '</div>';
 
-  // Score ring card
-  html += '<div class="score-card">'
-    + scoreRing(r.score, v.color)
-    + '<div class="score-info"><h2 style="color:' + v.color + '">' + v.label + '</h2>'
-    + '<p>Skor slop: ' + r.score + '/100 — semakin tinggi, semakin banyak pola AI.</p>'
-    + '<div class="score-meta">' + r.words.toLocaleString('id-ID') + ' kata dianalisis</div>'
-    + '</div></div>'
-    + '<div class="tip-box">' + v.tip + '</div>';
+  // Detail temuan
+  html += '<div class="tip-box">' + v.tip + '</div>';
 
   if (!r.findings.length) {
     html += '<div class="clean-box">Tidak ada pola slop signifikan terdeteksi.</div>';
@@ -1010,8 +1030,8 @@ function renderSentenceHighlight(text) {
   const sents = rawSents.map(s => s.trim()).filter(s => s.length > 5);
   if (sents.length < 2) return '';
 
-  let html = '<div class="sent-highlight-section"><h3>Highlight per kalimat</h3>'
-    + '<p class="viz-desc">Warna menunjukkan tingkat indikasi AI per kalimat — semakin merah, semakin mencurigakan.</p>'
+  let html = '<div class="sent-highlight-section"><h3>Analisis per kalimat</h3>'
+    + '<p class="viz-desc">Sorot warna menunjukkan probabilitas AI per kalimat — merah = sangat mungkin AI, peach = campuran.</p>'
     + '<div class="sent-text">';
   sents.forEach(sent => {
     const score = scoreSentence(sent);
@@ -1019,12 +1039,26 @@ function renderSentenceHighlight(text) {
     html += '<span class="sent ' + level + '" title="skor: ' + score + '">' + escapeHtml(sent) + '</span> ';
   });
   html += '</div><div class="hl-legend">'
-    + '<span><i style="background:transparent;border:1px solid var(--border)"></i>Bersih</span>'
-    + '<span><i style="background:color-mix(in srgb, var(--warn) 20%, transparent)"></i>Ringan</span>'
-    + '<span><i style="background:color-mix(in srgb, var(--fail) 25%, transparent)"></i>Sedang</span>'
-    + '<span><i style="background:color-mix(in srgb, var(--fail) 40%, transparent)"></i>Tinggi</span>'
+    + '<span><i style="background:transparent;border:1px solid var(--border);width:26px"></i>Manusia</span>'
+    + '<span><i style="background:rgba(251,191,36,0.25)"></i>Rendah</span>'
+    + '<span><i style="background:rgba(251,146,60,0.35)"></i>Sedang</span>'
+    + '<span><i style="background:rgba(220,38,38,0.4)"></i>Tinggi</span>'
     + '</div></div>';
   return html;
+}
+
+// Sapling-style "Fake" meter
+function renderFakeMeter(score, verdictLabel, verdictDesc) {
+  const color = score >= 70 ? 'var(--fail)' : score >= 40 ? 'var(--warn)' : 'var(--pass)';
+  return '<div class="fake-meter">'
+    + '<div class="fake-meter-top">'
+    + '<span class="fake-label">Probabilitas AI</span>'
+    + '<span class="fake-pct" style="color:' + color + '">' + score + '%</span>'
+    + '</div>'
+    + '<div class="fake-bar"><div class="fake-fill" style="width:' + score + '%"></div></div>'
+    + '<div class="fake-scale"><span>0% Manusia</span><span>100% AI</span></div>'
+    + '<div class="fake-verdict"><strong>' + verdictLabel + '.</strong> ' + verdictDesc + '</div>'
+    + '</div>';
 }
 
 // ===== VISUALIZATIONS =====
