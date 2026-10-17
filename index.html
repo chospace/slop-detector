@@ -4,224 +4,300 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Slop Detector — slop.ai.id</title>
-<meta name="description" content="Deteksi AI slop dalam teks. Paste tulisan, dapat skor + saran perbaikan.">
+<meta name="description" content="Analisis teks untuk mendeteksi pola penulisan khas AI. Gratis, tanpa daftar, 100% di browser.">
 <style>
 :root {
-  --bg: #ffffff; --text: #1a1a1a; --muted: #666;
-  --border: #e5e5e5; --accent: #fe5186;
-  --pass: #16a34a; --warn: #d97706; --fail: #dc2626;
+  --bg: #fafafa; --surface: #ffffff; --text: #111827; --muted: #6b7280;
+  --border: #e5e7eb; --accent: #4f46e5; --accent-soft: #eef2ff;
+  --pass: #059669; --pass-bg: #ecfdf5;
+  --warn: #d97706; --warn-bg: #fffbeb;
+  --fail: #dc2626; --fail-bg: #fef2f2;
+  --radius: 12px;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #1d1e20; --text: #e5e5e5; --muted: #a1a1aa; --border: #333; }
+  :root {
+    --bg: #0f1115; --surface: #1a1d24; --text: #e5e7eb; --muted: #9ca3af;
+    --border: #2e323b; --accent: #818cf8; --accent-soft: #1e1f3a;
+    --pass-bg: #052e22; --warn-bg: #3a2a0a; --fail-bg: #3a0d0d;
+  }
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg); color: var(--text); line-height: 1.6;
-  padding: 2rem 1rem; max-width: 760px; margin: 0 auto;
+  -webkit-font-smoothing: antialiased;
 }
-header { text-align: center; margin-bottom: 2rem; }
-header h1 { font-size: 2rem; margin-bottom: 0.3rem; }
-header h1 .cursor { color: var(--accent); animation: blink 1s infinite; }
-@keyframes blink { 50% { opacity: 0; } }
-header p { color: var(--muted); font-size: 0.95rem; }
-textarea {
-  width: 100%; min-height: 200px; padding: 1rem;
-  border: 1px solid var(--border); border-radius: 8px;
-  font-size: 1rem; font-family: inherit; resize: vertical;
-  background: var(--bg); color: var(--text); margin-bottom: 1rem;
+.container { max-width: 720px; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+
+/* Header */
+header { margin-bottom: 2.5rem; }
+.logo {
+  font-size: 0.8rem; font-weight: 700; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem;
 }
-.btn-row { display: flex; gap: 0.5rem; margin-bottom: 2rem; }
-button {
-  padding: 0.75rem 1.5rem; background: var(--accent); color: #fff;
-  border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;
+header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+header p { color: var(--muted); font-size: 1.05rem; max-width: 520px; }
+
+/* Tabs */
+.mode-tabs {
+  display: inline-flex; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 4px; margin-bottom: 1.25rem; gap: 2px;
 }
-button.secondary { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-#result { display: none; }
-.meter-box {
-  text-align: center; padding: 1.5rem;
-  border: 1px solid var(--border); border-radius: 12px; margin-bottom: 1.5rem;
-}
-.meter-score { font-size: 4rem; font-weight: 800; line-height: 1; }
-.meter-label { font-size: 1.1rem; font-weight: 600; margin-top: 0.3rem; }
-.meter-bar {
-  height: 10px; background: var(--border); border-radius: 99px;
-  margin: 1rem auto 0; max-width: 400px; overflow: hidden;
-}
-.meter-fill { height: 100%; border-radius: 99px; transition: width 0.5s; }
-.finding {
-  border: 1px solid var(--border); border-radius: 8px;
-  padding: 1rem; margin-bottom: 0.75rem;
-}
-.finding-head { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.3rem; }
-.badge {
-  font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.6rem;
-  border-radius: 99px; text-transform: uppercase; white-space: nowrap;
-}
-.badge.high { background: #fee2e2; color: var(--fail); }
-.badge.med { background: #fef3c7; color: var(--warn); }
-.badge.low { background: #dcfce7; color: var(--pass); }
-.finding-name { font-weight: 600; }
-.finding-desc { color: var(--muted); font-size: 0.9rem; }
-.finding-hits {
-  font-family: monospace; font-size: 0.8rem; margin-top: 0.5rem;
-  display: flex; flex-wrap: wrap; gap: 0.3rem;
-}
-.hit {
-  background: #fee2e2; color: var(--fail);
-  padding: 0.15rem 0.5rem; border-radius: 4px;
-}
-@media (prefers-color-scheme: dark) { .hit { background: #450a0a; } }
-.suggestion {
-  border-left: 3px solid var(--accent); padding: 0.75rem 1rem;
-  margin-bottom: 1.5rem; color: var(--muted); font-size: 0.95rem;
-  background: var(--border); border-radius: 0 8px 8px 0; opacity: 0.7;
-}
-footer { text-align: center; margin-top: 3rem; color: var(--muted); font-size: 0.85rem; }
-footer a { color: var(--accent); text-decoration: none; }
-.char-count { text-align: right; color: var(--muted); font-size: 0.8rem; margin-bottom: 0.5rem; }
-.mode-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
 .mode-tab {
-  padding: 0.6rem 1.2rem; border: 1px solid var(--border); border-radius: 8px;
-  background: transparent; color: var(--muted); cursor: pointer; font-size: 0.95rem;
+  padding: 0.55rem 1.25rem; border: none; border-radius: 7px;
+  background: transparent; color: var(--muted); cursor: pointer;
+  font-size: 0.9rem; font-weight: 600; transition: all 0.15s;
 }
-.mode-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-#urlInput {
-  width: 100%; padding: 0.9rem 1rem; font-size: 1rem;
-  border: 1px solid var(--border); border-radius: 8px;
-  background: var(--bg); color: var(--text); margin-bottom: 1rem;
+.mode-tab.active { background: var(--accent-soft); color: var(--accent); }
+
+/* Inputs */
+textarea, #urlInput {
+  width: 100%; padding: 1rem 1.1rem; font-size: 1rem; font-family: inherit;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+textarea { min-height: 220px; resize: vertical; }
+textarea:focus, #urlInput:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+#urlInput { margin-bottom: 0; }
+.url-hint { color: var(--muted); font-size: 0.85rem; margin: 0.5rem 0 0; }
+.char-count {
+  text-align: right; color: var(--muted);
+  font-size: 0.8rem; margin: 0.4rem 0 1rem;
+  font-variant-numeric: tabular-nums;
 }
 #urlMode { display: none; }
-.loading { text-align: center; padding: 2rem; color: var(--muted); }
+
+/* Buttons */
+.btn-row { display: flex; gap: 0.6rem; margin: 1.25rem 0 2.5rem; }
+.btn {
+  padding: 0.8rem 1.75rem; border-radius: 10px; font-size: 0.95rem;
+  font-weight: 600; cursor: pointer; border: none;
+  transition: transform 0.1s, opacity 0.15s;
+}
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { opacity: 0.92; }
+.btn-ghost {
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+
+/* Results */
+#result { display: none; }
+.score-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 2rem;
+  display: flex; align-items: center; gap: 1.75rem;
+  margin-bottom: 1.25rem;
+}
+.score-ring { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+.score-ring svg { transform: rotate(-90deg); }
+.score-num {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; font-size: 1.9rem; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.score-info h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
+.score-info p { color: var(--muted); font-size: 0.92rem; }
+.score-meta {
+  margin-top: 0.6rem; font-size: 0.8rem; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.finding {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.finding-head { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.35rem; }
+.severity {
+  font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.65rem;
+  border-radius: 99px; text-transform: uppercase; letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.severity.high { background: var(--fail-bg); color: var(--fail); }
+.severity.med { background: var(--warn-bg); color: var(--warn); }
+.severity.low { background: var(--pass-bg); color: var(--pass); }
+.finding-name { font-weight: 600; font-size: 0.97rem; }
+.finding-desc { color: var(--muted); font-size: 0.9rem; }
+.finding-tags { margin-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.tag {
+  font-family: "SF Mono", "Fira Code", monospace; font-size: 0.78rem;
+  background: var(--bg); border: 1px solid var(--border);
+  padding: 0.2rem 0.55rem; border-radius: 6px; color: var(--muted);
+}
+
+.tip-box {
+  border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  background: var(--surface); border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+  font-size: 0.93rem; color: var(--muted);
+}
+.tip-box strong { color: var(--text); }
+
+.clean-box {
+  background: var(--pass-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem;
+  text-align: center; color: var(--pass); font-weight: 600;
+}
+
+/* Loading & error */
+.loading { text-align: center; padding: 2.5rem; color: var(--muted); }
 .spinner {
-  display: inline-block; width: 24px; height: 24px;
+  display: inline-block; width: 28px; height: 28px; margin-bottom: 0.75rem;
   border: 3px solid var(--border); border-top-color: var(--accent);
-  border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 0.5rem;
+  border-radius: 50%; animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .error-box {
-  border: 1px solid var(--fail); border-radius: 8px; padding: 1rem;
-  color: var(--fail); margin-bottom: 1rem; font-size: 0.95rem;
+  border: 1px solid var(--fail); background: var(--fail-bg);
+  border-radius: var(--radius); padding: 1.1rem 1.25rem;
+  color: var(--fail); font-size: 0.93rem;
+}
+
+/* Footer */
+footer {
+  margin-top: 4rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 0.75rem;
+  color: var(--muted); font-size: 0.83rem;
+}
+footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.disclaimer { max-width: 420px; line-height: 1.5; }
+
+@media (max-width: 520px) {
+  header h1 { font-size: 1.6rem; }
+  .score-card { flex-direction: column; text-align: center; }
+  .btn-row { flex-wrap: wrap; }
+  .btn { flex: 1; }
 }
 </style>
 </head>
 <body>
+<div class="container">
 
 <header>
-  <h1>slop detector<span class="cursor">_</span></h1>
-  <p>Paste tulisan di bawah. Kami kasih tau seberapa bau AI-nya. 🤖👃</p>
+  <div class="logo">slop.ai.id</div>
+  <h1>Slop Detector</h1>
+  <p>Analisis teks untuk mendeteksi pola penulisan khas AI. Tempell tulisan atau masukkan URL — dapatkan skor dan temuan detail.</p>
 </header>
 
 <div class="mode-tabs">
-  <button class="mode-tab active" id="tabText">📝 Teks</button>
-  <button class="mode-tab" id="tabUrl">🔗 URL</button>
+  <button class="mode-tab active" id="tabText">Teks</button>
+  <button class="mode-tab" id="tabUrl">URL</button>
 </div>
 
 <div id="textMode">
-<div class="char-count"><span id="charCount">0</span> karakter</div>
-<textarea id="input" placeholder="Paste teks di sini... 
-
-Contoh slop:
-In today's fast-paced digital world, it's important to note that leveraging AI is a game-changer. Moreover, this vibrant tapestry of innovation..."></textarea>
+  <textarea id="input" placeholder="Tempel teks di sini untuk dianalisis..."></textarea>
+  <div class="char-count"><span id="charCount">0</span> karakter</div>
 </div>
 
 <div id="urlMode">
-<input type="url" id="urlInput" placeholder="https://contoh.com/artikel">
-<div style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem">Tool akan mengambil teks dari halaman web tersebut lalu menganalisisnya.</div>
+  <input type="url" id="urlInput" placeholder="https://contoh.com/artikel">
+  <p class="url-hint">Kami akan mengambil teks dari halaman tersebut dan menganalisisnya.</p>
 </div>
 
 <div class="btn-row">
-  <button id="analyzeBtn">Analisis</button>
-  <button class="secondary" id="sampleBtn">Coba contoh slop</button>
-  <button class="secondary" id="clearBtn">Hapus</button>
+  <button class="btn btn-primary" id="analyzeBtn">Analisis</button>
+  <button class="btn btn-ghost" id="sampleBtn">Contoh</button>
+  <button class="btn btn-ghost" id="clearBtn">Hapus</button>
 </div>
 
 <div id="result"></div>
 
 <footer>
-  dibuat oleh <a href="https://chospace.github.io">chospace</a> · slop.ai.id<br>
-  <span style="font-size:0.8rem;opacity:0.7">Deteksi berbasis pattern — bukan AI detector sempurna.<br>Teks natural yang rapi bisa lolos; slop yang obvious pasti ketangkep.</span>
+  <div class="disclaimer">
+    Deteksi berbasis pola linguistik, bukan model AI. Skor adalah estimasi — teks natural yang rapi dapat lolos, pola AI yang jelas akan terdeteksi.
+  </div>
+  <div>Dibuat oleh <a href="https://chospace.github.io">chospace</a></div>
 </footer>
+
+</div>
 
 <script>
 // ===== SLOP PATTERN DATABASE =====
 const SLOP_PHRASES = [
-  // English - classic AI tells
-  { p: /\bdelve\b/i, w: 8, label: '"delve"' },
-  { p: /in today'?s fast-paced/i, w: 10, label: '"in today\'s fast-paced..."' },
-  { p: /it'?s important to note/i, w: 7, label: '"it\'s important to note"' },
-  { p: /\bgame-?changer\b/i, w: 8, label: '"game-changer"' },
-  { p: /\btapestry\b/i, w: 9, label: '"tapestry"' },
-  { p: /\bvibrant\b/i, w: 6, label: '"vibrant"' },
-  { p: /\bland?scape\b/i, w: 5, label: '"landscape"' },
-  { p: /\bmoreover\b/i, w: 6, label: '"moreover"' },
-  { p: /\bfurthermore\b/i, w: 6, label: '"furthermore"' },
-  { p: /\badditionally\b/i, w: 5, label: '"additionally"' },
-  { p: /\bconsequently\b/i, w: 5, label: '"consequently"' },
-  { p: /\bleverage\b/i, w: 6, label: '"leverage"' },
-  { p: /\bharness\b/i, w: 6, label: '"harness"' },
-  { p: /\bembark\b/i, w: 7, label: '"embark"' },
-  { p: /\bunleash\b/i, w: 7, label: '"unleash"' },
-  { p: /\belevate\b/i, w: 6, label: '"elevate"' },
-  { p: /\bfoster\b/i, w: 5, label: '"foster"' },
-  { p: /\bpivotal\b/i, w: 6, label: '"pivotal"' },
-  { p: /\bcrucial\b/i, w: 4, label: '"crucial"' },
-  { p: /in conclusion\b/i, w: 7, label: '"in conclusion"' },
-  { p: /\boverall,?\b/i, w: 4, label: '"overall"' },
-  { p: /as an ai\b/i, w: 10, label: '"as an AI"' },
-  { p: /it'?s worth noting/i, w: 6, label: '"it\'s worth noting"' },
-  { p: /\bmultifaceted\b/i, w: 7, label: '"multifaceted"' },
-  { p: /\bdelve into\b/i, w: 8, label: '"delve into"' },
-  { p: /let'?s dive in/i, w: 7, label: '"let\'s dive in"' },
-  { p: /\bseamless\b/i, w: 5, label: '"seamless"' },
-  { p: /\brobust\b/i, w: 5, label: '"robust"' },
-  { p: /cutting-?edge/i, w: 5, label: '"cutting-edge"' },
-  { p: /ever-?evolving/i, w: 6, label: '"ever-evolving"' },
-  // Indonesian - AI slop patterns
-  { p: /di era digital yang serba cepat/i, w: 10, label: '"di era digital yang serba cepat"' },
-  { p: /penting untuk dicatat/i, w: 7, label: '"penting untuk dicatat"' },
-  { p: /penting untuk diingat/i, w: 7, label: '"penting untuk diingat"' },
-  { p: /sebagai kesimpulan/i, w: 7, label: '"sebagai kesimpulan"' },
-  { p: /secara keseluruhan/i, w: 5, label: '"secara keseluruhan"' },
-  { p: /tak dapat dipungkiri/i, w: 8, label: '"tak dapat dipungkiri"' },
-  { p: /tidak dapat dipungkiri/i, w: 8, label: '"tidak dapat dipungkiri"' },
-  { p: /dengan demikian\b/i, w: 5, label: '"dengan demikian"' },
-  { p: /selain itu,?\b/i, w: 4, label: '"selain itu"' },
-  { p: /perlu dicatat bahwa/i, w: 6, label: '"perlu dicatat bahwa"' },
-  { p: /dalam dunia yang terus berkembang/i, w: 8, label: '"dalam dunia yang terus berkembang"' },
-  { p: /sebagai penutup/i, w: 6, label: '"sebagai penutup"' },
-  { p: /pada akhirnya\b/i, w: 4, label: '"pada akhirnya"' },
-  { p: /memainkan peran (penting|krusial)/i, w: 6, label: '"memainkan peran penting"' },
-  { p: /menjadi game-?changer/i, w: 8, label: '"game-changer" (ID)' },
-  { p: /lanskap\b/i, w: 5, label: '"lanskap" (AI-ish)' },
+  { p: /\bdelve\b/i, w: 8, label: 'delve' },
+  { p: /in today'?s fast-paced/i, w: 10, label: "in today's fast-paced…" },
+  { p: /it'?s important to note/i, w: 7, label: "it's important to note" },
+  { p: /\bgame-?changer\b/i, w: 8, label: 'game-changer' },
+  { p: /\btapestry\b/i, w: 9, label: 'tapestry' },
+  { p: /\bvibrant\b/i, w: 6, label: 'vibrant' },
+  { p: /\bland?scape\b/i, w: 5, label: 'landscape' },
+  { p: /\bmoreover\b/i, w: 6, label: 'moreover' },
+  { p: /\bfurthermore\b/i, w: 6, label: 'furthermore' },
+  { p: /\badditionally\b/i, w: 5, label: 'additionally' },
+  { p: /\bconsequently\b/i, w: 5, label: 'consequently' },
+  { p: /\bleverage\b/i, w: 6, label: 'leverage' },
+  { p: /\bharness\b/i, w: 6, label: 'harness' },
+  { p: /\bembark\b/i, w: 7, label: 'embark' },
+  { p: /\bunleash\b/i, w: 7, label: 'unleash' },
+  { p: /\belevate\b/i, w: 6, label: 'elevate' },
+  { p: /\bfoster\b/i, w: 5, label: 'foster' },
+  { p: /\bpivotal\b/i, w: 6, label: 'pivotal' },
+  { p: /\bcrucial\b/i, w: 4, label: 'crucial' },
+  { p: /in conclusion\b/i, w: 7, label: 'in conclusion' },
+  { p: /\boverall,?\b/i, w: 4, label: 'overall' },
+  { p: /as an ai\b/i, w: 10, label: 'as an AI' },
+  { p: /it'?s worth noting/i, w: 6, label: "it's worth noting" },
+  { p: /\bmultifaceted\b/i, w: 7, label: 'multifaceted' },
+  { p: /\bdelve into\b/i, w: 8, label: 'delve into' },
+  { p: /let'?s dive in/i, w: 7, label: "let's dive in" },
+  { p: /\bseamless\b/i, w: 5, label: 'seamless' },
+  { p: /\brobust\b/i, w: 5, label: 'robust' },
+  { p: /cutting-?edge/i, w: 5, label: 'cutting-edge' },
+  { p: /ever-?evolving/i, w: 6, label: 'ever-evolving' },
+  { p: /di era digital yang serba cepat/i, w: 10, label: 'di era digital yang serba cepat' },
+  { p: /penting untuk dicatat/i, w: 7, label: 'penting untuk dicatat' },
+  { p: /penting untuk diingat/i, w: 7, label: 'penting untuk diingat' },
+  { p: /sebagai kesimpulan/i, w: 7, label: 'sebagai kesimpulan' },
+  { p: /secara keseluruhan/i, w: 5, label: 'secara keseluruhan' },
+  { p: /tak dapat dipungkiri/i, w: 8, label: 'tak dapat dipungkiri' },
+  { p: /tidak dapat dipungkiri/i, w: 8, label: 'tidak dapat dipungkiri' },
+  { p: /dengan demikian\b/i, w: 5, label: 'dengan demikian' },
+  { p: /selain itu,?\b/i, w: 4, label: 'selain itu' },
+  { p: /perlu dicatat bahwa/i, w: 6, label: 'perlu dicatat bahwa' },
+  { p: /dalam dunia yang terus berkembang/i, w: 8, label: 'dalam dunia yang terus berkembang' },
+  { p: /sebagai penutup/i, w: 6, label: 'sebagai penutup' },
+  { p: /pada akhirnya\b/i, w: 4, label: 'pada akhirnya' },
+  { p: /memainkan peran (penting|krusial)/i, w: 6, label: 'memainkan peran penting' },
+  { p: /menjadi game-?changer/i, w: 8, label: 'game-changer' },
+  { p: /\blanskap\b/i, w: 5, label: 'lanskap' },
 ];
 
 const SAMPLE_SLOP = `In today's fast-paced digital world, it's important to note that leveraging artificial intelligence is a game-changer for businesses. Moreover, this vibrant tapestry of innovation creates a multifaceted landscape of opportunities.
 
 Furthermore, companies that embark on this journey will unleash unprecedented potential. Additionally, it's worth noting that the seamless integration of AI is crucial for staying competitive.
 
-In conclusion, overall, the pivotal role of AI cannot be overstated. Let's delve into this ever-evolving realm together! 🚀🚀🚀`;
+In conclusion, overall, the pivotal role of AI cannot be overstated. Let's delve into this ever-evolving realm together!`;
 
 function analyze(text) {
   const findings = [];
   let slopScore = 0;
   const words = text.split(/\s+/).filter(w => w.length).length;
-  if (words < 10) return { error: 'Teks terlalu pendek (minimal 10 kata).' };
+  if (words < 10) return { error: 'Teks terlalu pendek — minimal 10 kata untuk analisis yang bermakna.' };
 
   // 1. Slop phrases
   const phraseHits = [];
   SLOP_PHRASES.forEach(({ p, w, label }) => {
-    const matches = text.match(new RegExp(p.source, p.flags.includes('g') ? p.flags : p.flags + 'g'));
+    const matches = text.match(new RegExp(p.source, 'gi'));
     if (matches) {
       slopScore += w * matches.length;
-      phraseHits.push(label + (matches.length > 1 ? ` ×${matches.length}` : ''));
+      phraseHits.push(label + (matches.length > 1 ? ' ×' + matches.length : ''));
     }
   });
   if (phraseHits.length) {
     findings.push({
       level: phraseHits.length >= 5 ? 'high' : phraseHits.length >= 2 ? 'med' : 'low',
       name: 'Frase khas AI',
-      desc: `${phraseHits.length} pattern AI terdeteksi. Ini kata/frasa yang overused banget sama LLM.`,
+      desc: phraseHits.length + ' pola frasa yang umum digunakan oleh model bahasa terdeteksi.',
       hits: phraseHits.slice(0, 12)
     });
   }
@@ -229,13 +305,12 @@ function analyze(text) {
   // 2. Emoji density
   const emojiRe = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
   const emojis = text.match(emojiRe) || [];
-  const emojiRatio = emojis.length / words;
-  if (emojis.length >= 3 || emojiRatio > 0.02) {
+  if (emojis.length >= 3) {
     slopScore += Math.min(25, emojis.length * 4);
     findings.push({
       level: emojis.length >= 8 ? 'high' : 'med',
-      name: 'Emoji berlebihan',
-      desc: `${emojis.length} emoji dalam ${words} kata. AI demen banget naro emoji di setiap poin.`,
+      name: 'Penggunaan emoji berlebihan',
+      desc: emojis.length + ' emoji dalam ' + words + ' kata — di atas rata-rata penulisan natural.',
       hits: [...new Set(emojis)].slice(0, 8)
     });
   }
@@ -246,24 +321,24 @@ function analyze(text) {
     slopScore += Math.min(15, exclams * 3);
     findings.push({
       level: 'med', name: 'Tanda seru berlebihan',
-      desc: `${exclams}x tanda seru. Manusia normal nggak se-excited itu.`,
-      hits: [`"!" × ${exclams}`]
+      desc: exclams + ' tanda seru terdeteksi.',
+      hits: ['! × ' + exclams]
     });
   }
 
-  // 4. Bullet/number list ratio
+  // 4. List-heavy structure
   const lines = text.split('\n').filter(l => l.trim());
   const bulletLines = lines.filter(l => /^[\s]*[-*•\d]+\s*[.)]\s/.test(l)).length;
   if (lines.length >= 5 && bulletLines / lines.length > 0.5) {
     slopScore += 12;
     findings.push({
-      level: 'med', name: 'Struktur list berlebihan',
-      desc: `${bulletLines} dari ${lines.length} baris adalah list. AI suka banget format list buat kelihatan rapi.`,
-      hits: [`${Math.round(bulletLines/lines.length*100)}% baris adalah list`]
+      level: 'med', name: 'Struktur daftar dominan',
+      desc: Math.round(bulletLines / lines.length * 100) + '% baris berbentuk daftar — pola format yang umum pada output AI.',
+      hits: [bulletLines + ' dari ' + lines.length + ' baris']
     });
   }
 
-  // 5. Repetitive paragraph starters
+  // 5. Repetitive paragraph openers
   const paras = text.split(/\n\s*\n/).filter(p => p.trim());
   if (paras.length >= 3) {
     const starters = paras.map(p => p.trim().split(/\s+/).slice(0, 3).join(' ').toLowerCase());
@@ -273,35 +348,48 @@ function analyze(text) {
     if (repeated.length) {
       slopScore += repeated.length * 8;
       findings.push({
-        level: 'med', name: 'Paragraf repetitif',
-        desc: `Beberapa paragraf dibuka dengan pola yang sama — ciri khas template AI.`,
-        hits: repeated.map(([k, v]) => `"${k}..." ×${v}`)
+        level: 'med', name: 'Pembuka paragraf repetitif',
+        desc: 'Beberapa paragraf dibuka dengan pola kata yang sama.',
+        hits: repeated.map(([k, v]) => '"' + k + '…" ×' + v)
       });
     }
   }
 
-  // 6. "Firstly/Secondly" enumeration
-  if (/\b(firstly|secondly|thirdly|pertama-tama|kedua,|ketiga,)\b/i.test(text)) {
+  // 6. Rigid enumeration
+  if (/\b(firstly|secondly|thirdly|pertama-tama)\b/i.test(text)) {
     slopScore += 8;
     findings.push({
       level: 'low', name: 'Enumerasi kaku',
-      desc: 'Firstly/Secondly/Thirdly — manusia jarang nulis kayak gini.',
-      hits: ['enumerasi AI-style']
+      desc: 'Penggunaan firstly/secondly/thirdly jarang muncul dalam penulisan natural.',
+      hits: ['enumerasi berurutan']
     });
   }
 
-  // Normalize to 0-100 (slop meter: higher = more slop)
   slopScore = Math.min(100, Math.round(slopScore * (100 / Math.max(words * 0.5, 60)) * 2));
-  slopScore = Math.min(100, slopScore);
-
   return { score: slopScore, findings, words };
 }
 
 function verdict(score) {
-  if (score >= 70) return { label: 'SLOP BERAT 🚨', color: 'var(--fail)', tip: 'Ini bau AI banget. Tulis ulang dengan suaramu sendiri — pakai pengalaman pribadi, opini, dan bahasa sehari-hari.' };
-  if (score >= 40) return { label: 'Agak slop ⚠️', color: 'var(--warn)', tip: 'Ada beberapa pattern AI. Coba ganti frasa yang di-highlight dengan bahasa yang lebih natural.' };
-  if (score >= 15) return { label: 'Sedikit bau AI 👀', color: 'var(--warn)', tip: 'Hampir bersih! Bersihin dikit lagi frasa yang ketangkep.' };
-  return { label: 'Bersih ✨', color: 'var(--pass)', tip: 'Teks ini terdengar manusiawi. Pertahankan!' };
+  if (score >= 70) return {
+    label: 'Kemungkinan besar AI',
+    color: 'var(--fail)',
+    tip: '<strong>Saran:</strong> tulis ulang dengan sudut pandang pribadi — pengalaman konkret, opini spesifik, dan diksi sehari-hari.'
+  };
+  if (score >= 40) return {
+    label: 'Indikasi AI sedang',
+    color: 'var(--warn)',
+    tip: '<strong>Saran:</strong> ganti frasa yang ditandai dengan bahasa yang lebih natural dan spesifik.'
+  };
+  if (score >= 15) return {
+    label: 'Indikasi AI ringan',
+    color: 'var(--warn)',
+    tip: '<strong>Saran:</strong> hampir bersih — perbaiki sedikit frasa yang terdeteksi.'
+  };
+  return {
+    label: 'Terdeteksi manusiawi',
+    color: 'var(--pass)',
+    tip: '<strong>Hasil baik.</strong> Teks tidak menunjukkan pola penulisan khas AI yang signifikan.'
+  };
 }
 
 // ===== MODE TABS =====
@@ -322,27 +410,20 @@ tabUrl.addEventListener('click', () => {
   textMode.style.display = 'none'; urlMode.style.display = 'block';
 });
 
-// ===== URL FETCH & TEXT EXTRACTION =====
+// ===== URL FETCH =====
 async function fetchUrlText(url) {
-  // Normalize URL
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-
-  // Via Microlink API (free, no key) — extract article/main/body text
   const api = 'https://api.microlink.io/?url=' + encodeURIComponent(url)
     + '&data.text.selector=article,main,body&data.text.attr=text';
   const res = await fetch(api);
   if (!res.ok) throw new Error('Gagal mengambil halaman.');
   const data = await res.json();
   if (data.status !== 'success') throw new Error('Gagal mengambil halaman.');
-
   let text = (data.data && data.data.text) || '';
   text = text.replace(/\s{3,}/g, '\n\n').trim();
-  const wordCount = text.split(/\s+/).filter(w => w.length).length;
-  if (wordCount < 10) throw new Error('Teks terlalu sedikit untuk dianalisis.');
-  // Batasi biar nggak terlalu panjang
-  if (wordCount > 5000) {
-    text = text.split(/\s+/).slice(0, 5000).join(' ');
-  }
+  const wc = text.split(/\s+/).filter(w => w.length).length;
+  if (wc < 10) throw new Error('Teks terlalu sedikit untuk dianalisis.');
+  if (wc > 5000) text = text.split(/\s+/).slice(0, 5000).join(' ');
   return text;
 }
 
@@ -351,75 +432,85 @@ const input = document.getElementById('input');
 const result = document.getElementById('result');
 const charCount = document.getElementById('charCount');
 
-input.addEventListener('input', () => charCount.textContent = input.value.length);
+input.addEventListener('input', () => charCount.textContent = input.value.length.toLocaleString('id-ID'));
 document.getElementById('clearBtn').addEventListener('click', () => {
   input.value = ''; charCount.textContent = '0'; result.style.display = 'none';
 });
 document.getElementById('sampleBtn').addEventListener('click', () => {
-  input.value = SAMPLE_SLOP; charCount.textContent = SAMPLE_SLOP.length;
+  input.value = SAMPLE_SLOP; charCount.textContent = SAMPLE_SLOP.length.toLocaleString('id-ID');
 });
 
 document.getElementById('analyzeBtn').addEventListener('click', async () => {
   result.style.display = 'block';
-
   if (currentMode === 'url') {
     const urlVal = document.getElementById('urlInput').value.trim();
     if (!urlVal) {
-      result.innerHTML = `<div class="error-box">Masukin URL dulu ya.</div>`;
+      result.innerHTML = '<div class="error-box">Masukkan URL terlebih dahulu.</div>';
       return;
     }
-    result.innerHTML = `<div class="loading"><div class="spinner"></div><br>Mengambil halaman...</div>`;
+    result.innerHTML = '<div class="loading"><div class="spinner"></div><br>Mengambil halaman…</div>';
     try {
       const fetchedText = await fetchUrlText(urlVal);
       input.value = fetchedText;
-      charCount.textContent = fetchedText.length;
+      charCount.textContent = fetchedText.length.toLocaleString('id-ID');
       runAnalysis(fetchedText);
     } catch (e) {
-      result.innerHTML = `<div class="error-box">⚠️ ${escapeHtml(e.message)}<br><span style="font-size:0.85rem;opacity:0.8">Coba copy-paste teksnya manual ke mode Teks.</span></div>`;
+      result.innerHTML = '<div class="error-box">' + escapeHtml(e.message) + '<br><span style="font-size:0.85rem;opacity:0.8">Alternatif: salin teks secara manual ke mode Teks.</span></div>';
     }
     return;
   }
-
   const text = input.value.trim();
   if (!text) return;
   runAnalysis(text);
 });
 
+function scoreRing(score, color) {
+  const r = 48, c = 2 * Math.PI * r;
+  const offset = c - (score / 100) * c;
+  return '<div class="score-ring">'
+    + '<svg width="110" height="110" viewBox="0 0 110 110">'
+    + '<circle cx="55" cy="55" r="' + r + '" fill="none" stroke="var(--border)" stroke-width="9"/>'
+    + '<circle cx="55" cy="55" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="9"'
+    + ' stroke-linecap="round" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + offset.toFixed(1) + '"/>'
+    + '</svg>'
+    + '<div class="score-num" style="color:' + color + '">' + score + '</div>'
+    + '</div>';
+}
+
 function runAnalysis(text) {
   const r = analyze(text);
   if (r.error) {
-    result.innerHTML = `<div class="finding"><div class="finding-desc">${r.error}</div></div>`;
-    result.style.display = 'block';
+    result.innerHTML = '<div class="error-box">' + escapeHtml(r.error) + '</div>';
     return;
   }
   const v = verdict(r.score);
-  let html = `<div class="meter-box">
-    <div class="meter-score" style="color:${v.color}">${r.score}</div>
-    <div class="meter-label" style="color:${v.color}">${v.label}</div>
-    <div style="color:var(--muted);font-size:0.85rem;margin-top:0.3rem">${r.words} kata dianalisis</div>
-    <div class="meter-bar"><div class="meter-fill" style="width:${r.score}%;background:${v.color}"></div></div>
-  </div>
-  <div class="suggestion">💡 ${v.tip}</div>`;
+  let html = '<div class="score-card">'
+    + scoreRing(r.score, v.color)
+    + '<div class="score-info"><h2 style="color:' + v.color + '">' + v.label + '</h2>'
+    + '<p>Skor slop: ' + r.score + '/100 — semakin tinggi, semakin banyak pola AI.</p>'
+    + '<div class="score-meta">' + r.words.toLocaleString('id-ID') + ' kata dianalisis</div>'
+    + '</div></div>'
+    + '<div class="tip-box">' + v.tip + '</div>';
 
   if (!r.findings.length) {
-    html += `<div class="finding"><div class="finding-head"><span class="badge low">Bersih</span><span class="finding-name">Tidak ada pattern slop terdeteksi</span></div></div>`;
+    html += '<div class="clean-box">Tidak ada pola slop signifikan terdeteksi.</div>';
   } else {
     r.findings.forEach(f => {
-      const badge = f.level === 'high' ? 'Parah' : f.level === 'med' ? 'Sedang' : 'Ringan';
-      html += `<div class="finding">
-        <div class="finding-head"><span class="badge ${f.level}">${badge}</span><span class="finding-name">${f.name}</span></div>
-        <div class="finding-desc">${f.desc}</div>
-        <div class="finding-hits">${f.hits.map(h => `<span class="hit">${escapeHtml(h)}</span>`).join('')}</div>
-      </div>`;
+      const sev = f.level === 'high' ? 'Tinggi' : f.level === 'med' ? 'Sedang' : 'Ringan';
+      html += '<div class="finding">'
+        + '<div class="finding-head"><span class="severity ' + f.level + '">' + sev + '</span>'
+        + '<span class="finding-name">' + f.name + '</span></div>'
+        + '<div class="finding-desc">' + f.desc + '</div>'
+        + '<div class="finding-tags">' + f.hits.map(h => '<span class="tag">' + escapeHtml(h) + '</span>').join('') + '</div>'
+        + '</div>';
     });
   }
   result.innerHTML = html;
-  result.style.display = 'block';
   result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function escapeHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 </script>
 </body>
