@@ -492,7 +492,7 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 <nav class="topnav">
   <a href="#" class="brand">slop<span class="logo-ai">AI</span></a>
   <div class="nav-links">
-    <a href="#how">Cara kerja</a>
+    <a href="#faq">FAQ</a>
     <button class="theme-toggle" id="themeToggle" aria-label="Ganti tema" title="Ganti tema (Alt+T)" accesskey="t">
       <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -532,8 +532,17 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
 <div id="result"></div>
 
-<div class="faq-section">
+<div class="faq-section" id="faq">
   <h2>Pertanyaan umum</h2>
+
+  <details class="faq-item">
+    <summary>Bagaimana cara kerjanya?</summary>
+    <div class="faq-answer">
+      <strong>Gratis — 9 metode rule-based:</strong> frase khas AI (70+ pola), burstiness, lexical diversity, entropi kata, gaya ChatGPT/Claude/Gemini, pola visual LinkedIn, dan analisis struktur.<br><br>
+      <strong>Pro (segera) — ML model:</strong> <em>Analisis Mendalam</em> pakai model machine learning yang dilatih khusus deteksi AI, lebih akurat untuk kasus borderline.<br><br>
+      Semua tier Gratis berjalan 100% di browser — teks tidak dikirim ke server manapun.
+    </div>
+  </details>
 
   <details class="faq-item">
     <summary>Apa itu AI detector?</summary>
@@ -566,33 +575,9 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
   </details>
 </div>
 
-<footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--muted);line-height:1.7">
-  <div id="how">
-    <strong style="color:var(--text)">Seberapa bisa dipercaya?</strong><br>
-    <strong style="color:var(--text)">Gratis:</strong> mendeteksi <em>pola</em> penulisan khas AI — bukan bukti mutlak. Akurat untuk teks AI yang obvious (~80%), tapi bisa miss AI yang diedit manusia, dan bisa false positive untuk tulisan formal.<br>
-    <strong style="color:var(--text)">Pro (segera):</strong> <em>Analisis Mendalam</em> pakai model machine learning yang dilatih khusus deteksi AI — lebih akurat untuk kasus borderline.<br>
-    Gunakan keduanya sebagai <em>sinyal awal</em>, bukan vonis final.
-    <details style="margin-top:0.5rem">
-      <summary style="cursor:pointer;color:var(--accent);font-weight:600">Metodologi lengkap</summary>
-      <div style="margin-top:0.5rem">
-        <strong style="color:var(--text)">Tier Gratis — 9 metode rule-based:</strong><br>
-        1. Frase khas AI (70+ pola ID + EN)<br>
-        2. Burstiness — variasi panjang kalimat<br>
-        3. Lexical diversity — rasio kata unik<br>
-        4. Entropi kata — seberapa predictable pilihan kata<br>
-        5. Gaya ChatGPT — pola umum model AI<br>
-        6. Gaya Claude — kesopanan & hedging khas<br>
-        7. Gaya Gemini — esai formal Indonesia<br>
-        8. Pola visual LinkedIn — hook, CTA, hashtag spam<br>
-        9. Struktur — dominasi list, paragraf repetitif<br><br>
-        <strong style="color:var(--text)">Tier Pro — ML model (segera):</strong><br>
-        Model transformer yang dilatih dengan ribuan contoh teks manusia vs AI.
-        Memberikan probabilitas berbasis statistik, bukan sekadar pattern matching.<br><br>
-        Semua tier Gratis berjalan 100% di browser — teks tidak dikirim ke server manapun.
-      </div>
-    </details>
-  </div>
-  <div style="margin-top:1rem">slopAI oleh <a href="https://chospace.github.io" style="color:var(--muted)">chospace</a></div>
+<footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--muted);text-align:center;line-height:1.7">
+  <div>slopAI — detektor tulisan AI gratis</div>
+  <div style="margin-top:0.25rem">Dibuat oleh <a href="https://chospace.github.io" style="color:var(--muted)">chospace</a></div>
 </footer>
 
 </div>
