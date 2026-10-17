@@ -820,6 +820,74 @@ function analyze(text) {
     });
   }
 
+  // 13. Perplexity approximation — entropi distribusi kata
+  // Prinsip: AI cenderung pakai kata-kata yang "aman" dan predictable.
+  // Kita ukur entropi Shannon dari distribusi frekuensi kata.
+  // Entropi rendah = terlalu predictable = ciri AI.
+  if (allWords.length >= 100) {
+    const total = allWords.length;
+    let entropy = 0;
+    const freqCounts = {};
+    allWords.forEach(w => freqCounts[w] = (freqCounts[w] || 0) + 1);
+    Object.values(freqCounts).forEach(count => {
+      const p = count / total;
+      entropy -= p * Math.log2(p);
+    });
+    // Normalisasi: entropi maks = log2(unique words)
+    const uniqueCount = Object.keys(freqCounts).length;
+    const maxEntropy = Math.log2(uniqueCount);
+    const normEntropy = maxEntropy > 0 ? entropy / maxEntropy : 1;
+    // normEntropy < 0.95 pada 100+ kata = terlalu predictable
+    if (normEntropy < 0.95) {
+      const penalty = Math.round((0.95 - normEntropy) * 200);
+      slopScore += Math.min(20, penalty);
+      findings.push({
+        level: normEntropy < 0.90 ? 'high' : 'med',
+        name: 'Pola kata terlalu predictable',
+        desc: 'Distribusi kata terlalu terpusat (entropi ' + normEntropy.toFixed(2) + '). AI cenderung memilih kata yang "aman".',
+        hits: [uniqueCount + ' kata unik, entropi ' + normEntropy.toFixed(2)]
+      });
+    }
+  }
+
+  // 14. Claude-style patterns
+  const claudeFindings = [];
+  const claudePatterns = [
+    { p: /i (understand|appreciate)/i, w: 6, label: '"I understand/appreciate"' },
+    { p: /that'?s a great question/i, w: 7, label: '"great question"' },
+    { p: /let me break this down/i, w: 7, label: '"let me break this down"' },
+    { p: /i apologize,? but/i, w: 6, label: '"I apologize, but"' },
+    { p: /it'?s worth (noting|considering) that/i, w: 5, label: '"worth noting/considering"' },
+    { p: /i'?d be happy to/i, w: 6, label: '"I\'d be happy to"' },
+    { p: /certainly!?/i, w: 5, label: '"Certainly!"' },
+    { p: /saya memaham(?:i|kan)/i, w: 6, label: '"saya memahami"' },
+    { p: /pertanyaan yang (bagus|baik|menarik)/i, w: 7, label: '"pertanyaan yang bagus"' },
+    { p: /mari kita (uraikan|bahas|bedah)/i, w: 6, label: '"mari kita uraikan"' },
+    { p: /dengan senang hati/i, w: 5, label: '"dengan senang hati"' },
+    { p: /tentu (saja|saya bisa)/i, w: 4, label: '"tentu saja"' },
+  ];
+  let claudeScore = 0;
+  claudePatterns.forEach(({ p, w, label }) => {
+    const m = text.match(new RegExp(p.source, 'gi'));
+    if (m) { claudeScore += w * m.length; claudeFindings.push(label + (m.length > 1 ? ' ×' + m.length : '')); }
+  });
+  // Claude hedging berlebihan
+  const hedges = (text.match(/\b(mungkin|kemungkinan|bisa jadi|sepertinya|tampaknya|perhaps|possibly|likely|arguably)\b/gi) || []).length;
+  const hedgeRatio = hedges / Math.max(words, 1);
+  if (hedgeRatio > 0.03 && words > 100) {
+    claudeScore += 8;
+    claudeFindings.push('hedging berlebihan (' + hedges + '×)');
+  }
+  if (claudeFindings.length) {
+    slopScore += Math.min(20, claudeScore);
+    findings.push({
+      level: claudeFindings.length >= 3 ? 'high' : 'med',
+      name: 'Gaya Claude AI',
+      desc: 'Pola kesopanan dan hedging yang khas dari Claude.',
+      hits: claudeFindings.slice(0, 8)
+    });
+  }
+
   return { score: slopScore, findings, words, topWords, sentLens };
 }
 
