@@ -64,6 +64,18 @@ body {
   display: flex; justify-content: center; gap: 2.5rem;
   margin-bottom: 0.5rem;
 }
+.free-badge { margin: 0 auto 1.75rem; }
+.free-pill {
+  display: inline-block; font-size: 0.85rem; font-weight: 800;
+  letter-spacing: 0.12em; padding: 0.5rem 1.25rem;
+  background: linear-gradient(135deg, var(--pass), #10b981);
+  color: #fff; border-radius: 99px;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+}
+.free-sub {
+  display: block; margin-top: 0.6rem;
+  font-size: 0.88rem; color: var(--muted);
+}
 .hero-stat { text-align: center; }
 .hero-stat .num {
   font-size: 1.5rem; font-weight: 800; color: var(--text);
@@ -336,10 +348,14 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
   <div class="logo">slop.ai.id</div>
   <h1>Tulisan ini <span class="grad">bau AI</span> nggak sih?</h1>
   <p>Tempel teks atau masukkan URL. Kami analisis 70+ pola linguistik, ritme kalimat, dan struktur visual — lalu kasih tahu seberapa besar kemungkinan teks ini hasil generate AI.</p>
+  <div class="free-badge">
+    <span class="free-pill">100% GRATIS</span>
+    <span class="free-sub">Tanpa daftar · Tanpa batas · Tanpa iklan</span>
+  </div>
   <div class="hero-stats">
     <div class="hero-stat"><div class="num">70+</div><div class="lbl">Pola terdeteksi</div></div>
     <div class="hero-stat"><div class="num">8</div><div class="lbl">Metode analisis</div></div>
-    <div class="hero-stat"><div class="num">100%</div><div class="lbl">Gratis & privat</div></div>
+    <div class="hero-stat"><div class="num">0</div><div class="lbl">Rupiah</div></div>
   </div>
 </div>
 
@@ -387,6 +403,27 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
   </div>
   <div>Dibuat oleh <a href="https://chospace.github.io">chospace</a></div>
 </footer>
+
+<div style="margin-top:2.5rem;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">
+  <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;text-align:center">Kenapa slop.ai.id?</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;text-align:center;font-size:0.85rem">
+    <div>
+      <div style="font-size:1.5rem;margin-bottom:0.25rem">💰</div>
+      <strong>Gratis selamanya</strong><br>
+      <span style="color:var(--muted)">Kompetitor: $15–50/bulan</span>
+    </div>
+    <div>
+      <div style="font-size:1.5rem;margin-bottom:0.25rem">🔒</div>
+      <strong>100% privat</strong><br>
+      <span style="color:var(--muted)">Analisis di browser kamu</span>
+    </div>
+    <div>
+      <div style="font-size:1.5rem;margin-bottom:0.25rem">🇮🇩</div>
+      <strong>Bahasa Indonesia</strong><br>
+      <span style="color:var(--muted)">Pola lokal terdeteksi</span>
+    </div>
+  </div>
+</div>
 
 </div>
 
