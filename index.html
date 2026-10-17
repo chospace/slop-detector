@@ -261,14 +261,16 @@ textarea:focus, #urlInput:focus {
   letter-spacing: -0.02em; line-height: 1;
 }
 .fake-bar {
-  height: 14px; border-radius: 99px; background: var(--bg);
-  border: 1px solid var(--border); overflow: hidden; position: relative;
-}
-.fake-fill {
-  height: 100%; border-radius: 99px;
+  height: 14px; border-radius: 99px; position: relative;
   background: linear-gradient(90deg, var(--pass) 0%, var(--warn) 50%, var(--fail) 100%);
-  background-size: 200px 100%;
-  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 0.25;
+}
+.fake-marker {
+  position: absolute; top: -4px; bottom: -4px; width: 4px;
+  border-radius: 2px; background: var(--text);
+  transform: translateX(-50%);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  transition: left 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .fake-scale {
   display: flex; justify-content: space-between;
@@ -278,6 +280,77 @@ textarea:focus, #urlInput:focus {
   margin-top: 1rem; font-size: 0.95rem; color: var(--muted);
 }
 .fake-verdict strong { color: var(--text); }
+
+/* Pro actions */
+.pro-actions {
+  display: flex; gap: 0.6rem; margin-top: 1.25rem;
+  flex-wrap: wrap; padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.btn-pro {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff; border: none;
+  padding: 0.8rem 1.5rem; border-radius: 10px;
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.btn-pro:hover { opacity: 0.92; }
+.pro-badge {
+  font-size: 0.65rem; font-weight: 800; letter-spacing: 0.08em;
+  background: #fbbf24; color: #111;
+  padding: 2px 6px; border-radius: 4px; margin-left: 4px;
+  vertical-align: middle;
+}
+.btn-sm { padding: 0.5rem 1rem; font-size: 0.82rem; }
+
+/* History */
+#historyPanel { margin-top: 1rem; }
+.history-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
+.history-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.75rem 1rem; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px;
+}
+.history-preview { font-size: 0.88rem; margin-bottom: 0.2rem; }
+.history-meta { font-size: 0.75rem; color: var(--muted); }
+.history-score { font-size: 1.4rem; font-weight: 800; }
+.history-empty { color: var(--muted); font-size: 0.9rem; padding: 1rem 0; }
+
+/* Pro modal */
+.pro-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 1rem;
+}
+.pro-modal {
+  background: var(--surface); border-radius: 16px;
+  padding: 2.5rem; max-width: 400px; width: 100%;
+  text-align: center; position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.pro-modal-close {
+  position: absolute; top: 1rem; right: 1rem;
+  background: none; border: none; font-size: 1.2rem;
+  cursor: pointer; color: var(--muted);
+}
+.pro-modal h2 { font-size: 1.4rem; margin-bottom: 0.75rem; }
+.pro-modal-desc { color: var(--muted); font-size: 0.92rem; margin-bottom: 1.25rem; line-height: 1.6; }
+.pro-comingsoon {
+  display: inline-block; font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--accent-soft); color: var(--accent);
+  padding: 0.4rem 1rem; border-radius: 99px; margin-bottom: 1rem;
+}
+.pro-price { margin-bottom: 1.25rem; }
+.pro-price-num { font-size: 2rem; font-weight: 800; }
+.pro-note { font-size: 0.78rem; color: var(--muted); margin-top: 0.75rem; }
+
+/* Print: hanya hasil analisis */
+@media print {
+  .topnav, .page-head, .mode-tabs, #textMode, #urlMode,
+  .btn-row, .pro-actions, footer, #historyPanel { display: none !important; }
+  body { background: #fff; }
+  .fake-meter, .finding { break-inside: avoid; }
+}
 
 /* Sapling-style sentence highlight: red -> peach -> clean */
 .sent-text {
@@ -381,7 +454,6 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
   <a href="#" class="brand">slop<span class="logo-ai">AI</span></a>
   <div class="nav-links">
     <a href="#how">Cara kerja</a>
-    <a href="https://chospace.github.io">chospace</a>
     <button class="theme-toggle" id="themeToggle" aria-label="Ganti tema" title="Ganti tema (Alt+T)" accesskey="t">
       <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg id="icon-sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -1046,6 +1118,115 @@ function runAnalysis(text) {
 
   result.innerHTML = html;
   result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Simpan ke riwayat (localStorage)
+  saveToHistory(text, r.score, v.label);
+
+  // Tambah tombol aksi Pro
+  const actionBar = document.createElement('div');
+  actionBar.className = 'pro-actions';
+  actionBar.innerHTML =
+    '<button class="btn btn-ghost" onclick="exportPDF()">📄 Export PDF</button>'
+    + '<button class="btn btn-ghost" onclick="toggleHistory()">📋 Riwayat</button>'
+    + '<button class="btn btn-pro" onclick="showProModal()">🤖 Verifikasi AI <span class="pro-badge">PRO</span></button>';
+  result.appendChild(actionBar);
+
+  // Panel riwayat (hidden)
+  const histPanel = document.createElement('div');
+  histPanel.id = 'historyPanel';
+  histPanel.style.display = 'none';
+  histPanel.innerHTML = renderHistory();
+  result.appendChild(histPanel);
+}
+
+// ===== PRO: RIWAYAT (localStorage) =====
+function saveToHistory(text, score, label) {
+  try {
+    let hist = JSON.parse(localStorage.getItem('slopai-history') || '[]');
+    hist.unshift({
+      date: new Date().toISOString(),
+      preview: text.slice(0, 80) + (text.length > 80 ? '...' : ''),
+      score: score,
+      label: label,
+      words: text.split(/\s+/).length
+    });
+    hist = hist.slice(0, 20); // max 20
+    localStorage.setItem('slopai-history', JSON.stringify(hist));
+  } catch(e) {}
+}
+
+function renderHistory() {
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem('slopai-history') || '[]'); } catch(e) {}
+  if (!hist.length) return '<div class="history-empty">Belum ada riwayat analisis.</div>';
+  let html = '<div class="history-list">';
+  hist.forEach(h => {
+    const d = new Date(h.date).toLocaleString('id-ID', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+    const color = h.score >= 70 ? 'var(--fail)' : h.score >= 40 ? 'var(--warn)' : 'var(--pass)';
+    html += '<div class="history-item">'
+      + '<div class="history-main"><div class="history-preview">' + escapeHtml(h.preview) + '</div>'
+      + '<div class="history-meta">' + d + ' · ' + h.words + ' kata</div></div>'
+      + '<div class="history-score" style="color:' + color + '">' + h.score + '%</div>'
+      + '</div>';
+  });
+  return html + '</div><button class="btn btn-ghost btn-sm" onclick="clearHistory()">Hapus riwayat</button>';
+}
+
+function toggleHistory() {
+  const p = document.getElementById('historyPanel');
+  if (p) {
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+    if (p.style.display === 'block') p.innerHTML = renderHistory();
+  }
+}
+
+function clearHistory() {
+  localStorage.removeItem('slopai-history');
+  const p = document.getElementById('historyPanel');
+  if (p) p.innerHTML = renderHistory();
+}
+
+// ===== PRO: EXPORT PDF (via print) =====
+function exportPDF() {
+  window.print();
+}
+
+// ===== PRO: MODAL VERIFIKASI AI (coming soon) =====
+function showProModal() {
+  const existing = document.getElementById('proModal');
+  if (existing) { existing.style.display = 'flex'; return; }
+  const modal = document.createElement('div');
+  modal.id = 'proModal';
+  modal.className = 'pro-modal-overlay';
+  modal.innerHTML =
+    '<div class="pro-modal">'
+    + '<button class="pro-modal-close" onclick="document.getElementById(\'proModal\').style.display=\'none\'">✕</button>'
+    + '<h2>🤖 Verifikasi AI</h2>'
+    + '<p class="pro-modal-desc">Second opinion dari model machine learning khusus deteksi AI — lebih akurat untuk teks yang dimanipulasi.</p>'
+    + '<div class="pro-comingsoon">Segera hadir di slopAI Pro</div>'
+    + '<div class="pro-price"><span class="pro-price-num">Rp15.000</span>/bulan</div>'
+    + '<button class="btn btn-primary" onclick="joinWaitlist()">Ikut Waitlist</button>'
+    + '<p class="pro-note">Tanpa kartu kredit. Kami kabari saat launching.</p>'
+    + '</div>';
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) modal.style.display = 'none';
+  });
+  document.body.appendChild(modal);
+}
+
+function joinWaitlist() {
+  const email = prompt('Masukkan email untuk waitlist slopAI Pro:');
+  if (email && email.includes('@')) {
+    try {
+      let wl = JSON.parse(localStorage.getItem('slopai-waitlist') || '[]');
+      wl.push({ email: email, date: new Date().toISOString() });
+      localStorage.setItem('slopai-waitlist', JSON.stringify(wl));
+    } catch(e) {}
+    alert('Terima kasih! Kami akan kabari saat slopAI Pro launching. 🚀');
+    document.getElementById('proModal').style.display = 'none';
+  } else if (email) {
+    alert('Email tidak valid.');
+  }
 }
 
 // ===== SENTENCE-LEVEL HIGHLIGHT =====
@@ -1100,7 +1281,7 @@ function renderFakeMeter(score, verdictLabel, verdictDesc) {
     + '<span class="fake-label">Probabilitas AI</span>'
     + '<span class="fake-pct" style="color:' + color + '">' + score + '%</span>'
     + '</div>'
-    + '<div class="fake-bar"><div class="fake-fill" style="width:' + score + '%"></div></div>'
+    + '<div class="fake-bar"><div class="fake-marker" style="left:' + score + '%"></div></div>'
     + '<div class="fake-scale"><span>0% Manusia</span><span>100% AI</span></div>'
     + '<div class="fake-verdict"><strong>' + verdictLabel + '.</strong> ' + verdictDesc + '</div>'
     + '</div>';
