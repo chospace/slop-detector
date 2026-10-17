@@ -493,13 +493,26 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 <footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--muted);line-height:1.7">
   <div id="how">
     <strong style="color:var(--text)">Seberapa bisa dipercaya?</strong><br>
-    Tool ini mendeteksi <em>pola</em>, bukan membuktikan asal teks. Skor tinggi = banyak pola AI, bukan vonis.
-    Gunakan sebagai <em>sinyal awal</em>, bukan keputusan final.
+    <strong style="color:var(--text)">Gratis:</strong> mendeteksi <em>pola</em> penulisan khas AI — bukan bukti mutlak. Akurat untuk teks AI yang obvious (~80%), tapi bisa miss AI yang diedit manusia, dan bisa false positive untuk tulisan formal.<br>
+    <strong style="color:var(--text)">Pro (segera):</strong> <em>Analisis Mendalam</em> pakai model machine learning yang dilatih khusus deteksi AI — lebih akurat untuk kasus borderline.<br>
+    Gunakan keduanya sebagai <em>sinyal awal</em>, bukan vonis final.
     <details style="margin-top:0.5rem">
-      <summary style="cursor:pointer;color:var(--accent);font-weight:600">Metodologi</summary>
+      <summary style="cursor:pointer;color:var(--accent);font-weight:600">Metodologi lengkap</summary>
       <div style="margin-top:0.5rem">
-        Frase khas AI · Burstiness · Lexical diversity · Entropi kata · Pola visual · Gaya per-model (ChatGPT, Claude, Gemini).<br>
-        100% berjalan di browser — teks tidak dikirim ke server.
+        <strong style="color:var(--text)">Tier Gratis — 9 metode rule-based:</strong><br>
+        1. Frase khas AI (70+ pola ID + EN)<br>
+        2. Burstiness — variasi panjang kalimat<br>
+        3. Lexical diversity — rasio kata unik<br>
+        4. Entropi kata — seberapa predictable pilihan kata<br>
+        5. Gaya ChatGPT — pola umum model AI<br>
+        6. Gaya Claude — kesopanan & hedging khas<br>
+        7. Gaya Gemini — esai formal Indonesia<br>
+        8. Pola visual LinkedIn — hook, CTA, hashtag spam<br>
+        9. Struktur — dominasi list, paragraf repetitif<br><br>
+        <strong style="color:var(--text)">Tier Pro — ML model (segera):</strong><br>
+        Model transformer yang dilatih dengan ribuan contoh teks manusia vs AI.
+        Memberikan probabilitas berbasis statistik, bukan sekadar pattern matching.<br><br>
+        Semua tier Gratis berjalan 100% di browser — teks tidak dikirim ke server manapun.
       </div>
     </details>
   </div>
