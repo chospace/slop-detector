@@ -365,6 +365,46 @@ function analyze(text) {
     });
   }
 
+  // 7. Burstiness — variasi panjang kalimat (ala GPTZero)
+  // Manusia: campuran kalimat pendek & panjang. AI: cenderung seragam.
+  const sentences = text.split(/[.!?…]+/).map(s => s.trim()).filter(s => s.split(/\s+/).length >= 3);
+  if (sentences.length >= 5) {
+    const lens = sentences.map(s => s.split(/\s+/).length);
+    const mean = lens.reduce((a, b) => a + b, 0) / lens.length;
+    const variance = lens.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / lens.length;
+    const cv = mean > 0 ? Math.sqrt(variance) / mean : 0; // coefficient of variation
+    // CV < 0.4 = sangat seragam (AI-like); CV > 0.7 = variatif (human-like)
+    if (cv < 0.4) {
+      const penalty = Math.round((0.4 - cv) * 50); // 0-20
+      slopScore += penalty;
+      findings.push({
+        level: cv < 0.25 ? 'high' : 'med',
+        name: 'Ritme kalimat monoton',
+        desc: 'Panjang kalimat terlalu seragam (CV ' + cv.toFixed(2) + '). Penulis manusia biasanya bervariasi antara kalimat pendek dan panjang.',
+        hits: [sentences.length + ' kalimat, rata-rata ' + mean.toFixed(1) + ' kata']
+      });
+    }
+  }
+
+  // 8. Lexical diversity — rasio kata unik
+  // AI cenderung mengulang kosakata yang sama
+  const allWords = text.toLowerCase().replace(/[^\p{L}\s]/gu, '').split(/\s+/).filter(w => w.length > 2);
+  if (allWords.length >= 50) {
+    const unique = new Set(allWords).size;
+    const ttr = unique / allWords.length; // type-token ratio
+    // TTR < 0.4 pada 50+ kata = repetitif
+    if (ttr < 0.45) {
+      const penalty = Math.round((0.45 - ttr) * 60); // 0-27
+      slopScore += penalty;
+      findings.push({
+        level: ttr < 0.35 ? 'high' : 'med',
+        name: 'Kosakata repetitif',
+        desc: 'Rasio kata unik rendah (' + (ttr * 100).toFixed(0) + '%). Teks terasa mengulang kata yang sama.',
+        hits: [unique + ' kata unik dari ' + allWords.length + ' total']
+      });
+    }
+  }
+
   slopScore = Math.min(100, Math.round(slopScore * (100 / Math.max(words * 0.5, 60)) * 2));
   return { score: slopScore, findings, words };
 }
