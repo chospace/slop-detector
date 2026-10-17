@@ -326,23 +326,23 @@ tabUrl.addEventListener('click', () => {
 async function fetchUrlText(url) {
   // Normalize URL
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-  const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-  const res = await fetch(proxy);
+
+  // Via Microlink API (free, no key) — extract article/main/body text
+  const api = 'https://api.microlink.io/?url=' + encodeURIComponent(url)
+    + '&data.text.selector=article,main,body&data.text.attr=text';
+  const res = await fetch(api);
   if (!res.ok) throw new Error('Gagal mengambil halaman.');
   const data = await res.json();
-  const html = data.contents;
-  if (!html || html.length < 500) throw new Error('Halaman kosong atau diblokir.');
+  if (data.status !== 'success') throw new Error('Gagal mengambil halaman.');
 
-  // Extract text from HTML
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  // Remove noise
-  doc.querySelectorAll('script, style, nav, header, footer, aside, form, iframe').forEach(el => el.remove());
-  // Prefer article/main content
-  const main = doc.querySelector('article') || doc.querySelector('main') || doc.body;
-  let text = main.innerText || '';
-  // Clean up
-  text = text.replace(/\n{3,}/g, '\n\n').trim();
-  if (text.split(/\s+/).length < 10) throw new Error('Teks terlalu sedikit untuk dianalisis.');
+  let text = (data.data && data.data.text) || '';
+  text = text.replace(/\s{3,}/g, '\n\n').trim();
+  const wordCount = text.split(/\s+/).filter(w => w.length).length;
+  if (wordCount < 10) throw new Error('Teks terlalu sedikit untuk dianalisis.');
+  // Batasi biar nggak terlalu panjang
+  if (wordCount > 5000) {
+    text = text.split(/\s+/).slice(0, 5000).join(' ');
+  }
   return text;
 }
 
