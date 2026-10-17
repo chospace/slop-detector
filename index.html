@@ -1128,7 +1128,7 @@ function runAnalysis(text) {
   actionBar.innerHTML =
     '<button class="btn btn-ghost" onclick="exportPDF()">📄 Export PDF</button>'
     + '<button class="btn btn-ghost" onclick="toggleHistory()">📋 Riwayat</button>'
-    + '<button class="btn btn-pro" onclick="showProModal()">🤖 Verifikasi AI <span class="pro-badge">PRO</span></button>';
+    + '<button class="btn btn-pro" onclick="showProModal()">🔍 Analisis Mendalam <span class="pro-badge">PRO</span></button>';
   result.appendChild(actionBar);
 
   // Panel riwayat (hidden)
@@ -1201,7 +1201,7 @@ function showProModal() {
   modal.innerHTML =
     '<div class="pro-modal">'
     + '<button class="pro-modal-close" onclick="document.getElementById(\'proModal\').style.display=\'none\'">✕</button>'
-    + '<h2>🤖 Verifikasi AI</h2>'
+    + '<h2>🔍 Analisis Mendalam</h2>'
     + '<p class="pro-modal-desc">Second opinion dari model machine learning khusus deteksi AI — lebih akurat untuk teks yang dimanipulasi.</p>'
     + '<div class="pro-comingsoon">Segera hadir di slopAI Pro</div>'
     + '<div class="pro-price"><span class="pro-price-num">Rp15.000</span>/bulan</div>'
