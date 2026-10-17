@@ -106,6 +106,21 @@ body {
   color: var(--muted); text-decoration: none;
 }
 .topnav .nav-links a:hover { color: var(--text); }
+/* Professional footer */
+.site-footer {
+  margin-top: 3rem; padding: 2rem 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center; font-size: 0.85rem; color: var(--muted);
+  line-height: 1.8;
+}
+.footer-brand { font-weight: 700; color: var(--text); font-size: 0.95rem; margin-bottom: 0.5rem; }
+.footer-links { margin-bottom: 0.5rem; }
+.footer-links a { color: var(--muted); text-decoration: none; margin: 0 0.25rem; }
+.footer-links a:hover { color: var(--accent); }
+.footer-sep { opacity: 0.4; }
+.footer-made { font-size: 0.78rem; }
+.footer-made a { color: var(--muted); }
+
 /* Language toggle */
 .lang-toggle {
   background: transparent; border: 1px solid var(--border);
@@ -572,7 +587,7 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 </nav>
 
 <div class="page-head">
-  <h1>Detektor Tulisan AI</h1>
+  <h1 data-i18n="hero_title">Detektor Tulisan AI</h1>
   <p data-i18n="hero_desc">Tempel teks atau masukkan URL. Kami menganalisis pola linguistik, ritme kalimat, dan struktur penulisan untuk memperkirakan kemungkinan teks dibuat oleh AI.</p>
   <span class="free-note" data-i18n="hero_badges">✓ Gratis · Tanpa daftar · 100% privat di browser</span>
 </div>
@@ -646,9 +661,16 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
   </details>
 </div>
 
-<footer style="margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--muted);text-align:center;line-height:1.7">
-  <div data-i18n="footer_tagline">slopAI — detektor tulisan AI gratis</div>
-  <div style="margin-top:0.25rem">data-i18n="footer_made">Dibuat oleh</span> <a href="https://chospace.github.io" style="color:var(--muted)">chospace</a></div>
+<footer class="site-footer">
+  <div class="footer-brand" data-i18n="footer_tagline">slopAI — detektor tulisan AI gratis</div>
+  <div class="footer-links">
+    <a href="#faq" data-i18n="nav_faq">FAQ</a>
+    <span class="footer-sep">·</span>
+    <a href="https://chospace.github.io">chospace</a>
+    <span class="footer-sep">·</span>
+    <a href="https://github.com/chospace/slop-detector" data-i18n="footer_github">GitHub</a>
+  </div>
+  <div class="footer-made"><span data-i18n="footer_made">Dibuat oleh</span> <a href="https://chospace.github.io">chospace</a> · <span data-i18n="footer_free">Gratis selamanya</span></div>
 </footer>
 
 </div>
@@ -1122,33 +1144,35 @@ function analyze(text) {
 }
 
 function verdict(score) {
+  const lang = localStorage.getItem('slopai-lang') || 'id';
+  const en = lang === 'en';
   if (score >= 60) return {
-    label: 'Kemungkinan besar AI',
-    desc: 'Teks ini menunjukkan banyak pola penulisan khas AI. Sangat disarankan untuk ditinjau ulang.',
+    label: en ? 'Very likely AI' : 'Kemungkinan besar AI',
+    desc: en ? 'This text shows many AI writing patterns. Strongly recommended for review.' : 'Teks ini menunjukkan banyak pola penulisan khas AI. Sangat disarankan untuk ditinjau ulang.',
     banner: 'danger', icon: '🤖',
     color: 'var(--fail)',
-    tip: '<strong>Saran:</strong> tulis ulang dengan sudut pandang pribadi — pengalaman konkret, opini spesifik, dan diksi sehari-hari.'
+    tip: en ? '<strong>Tip:</strong> rewrite with a personal angle — concrete experiences, specific opinions, everyday language.' : '<strong>Saran:</strong> tulis ulang dengan sudut pandang pribadi — pengalaman konkret, opini spesifik, dan diksi sehari-hari.'
   };
   if (score >= 25) return {
-    label: 'Indikasi AI sedang',
-    desc: 'Beberapa pola AI terdeteksi. Layak untuk diperiksa lebih lanjut.',
+    label: en ? 'Moderate AI signals' : 'Indikasi AI sedang',
+    desc: en ? 'Several AI patterns detected. Worth a closer look.' : 'Beberapa pola AI terdeteksi. Layak untuk diperiksa lebih lanjut.',
     banner: 'warning', icon: '⚠️',
     color: 'var(--warn)',
-    tip: '<strong>Saran:</strong> ganti frasa yang ditandai dengan bahasa yang lebih natural dan spesifik.'
+    tip: en ? '<strong>Tip:</strong> replace flagged phrases with more natural, specific language.' : '<strong>Saran:</strong> ganti frasa yang ditandai dengan bahasa yang lebih natural dan spesifik.'
   };
   if (score >= 10) return {
-    label: 'Indikasi AI ringan',
-    desc: 'Hanya sedikit pola yang terdeteksi. Kemungkinan besar ditulis manusia.',
+    label: en ? 'Light AI signals' : 'Indikasi AI ringan',
+    desc: en ? 'Only a few patterns detected. Likely human-written.' : 'Hanya sedikit pola yang terdeteksi. Kemungkinan besar ditulis manusia.',
     banner: 'warning', icon: '👀',
     color: 'var(--warn)',
-    tip: '<strong>Saran:</strong> hampir bersih — perbaiki sedikit frasa yang terdeteksi.'
+    tip: en ? '<strong>Tip:</strong> almost clean — fix the few flagged phrases.' : '<strong>Saran:</strong> hampir bersih — perbaiki sedikit frasa yang terdeteksi.'
   };
   return {
-    label: 'Terdeteksi manusiawi',
-    desc: 'Tidak ada pola AI yang signifikan. Tulisan ini terasa natural.',
+    label: en ? 'Looks human' : 'Terdeteksi manusiawi',
+    desc: en ? 'No significant AI patterns. This writing feels natural.' : 'Tidak ada pola AI yang signifikan. Tulisan ini terasa natural.',
     banner: 'success', icon: '✨',
     color: 'var(--pass)',
-    tip: '<strong>Hasil baik.</strong> Teks tidak menunjukkan pola penulisan khas AI yang signifikan.'
+    tip: en ? '<strong>Good result.</strong> Text shows no significant AI writing patterns.' : '<strong>Hasil baik.</strong> Teks tidak menunjukkan pola penulisan khas AI yang signifikan.'
   };
 }
 
@@ -1505,18 +1529,23 @@ function renderSentenceHighlight(text) {
 // Probability meter
 function renderFakeMeter(score, verdictLabel, verdictDesc) {
   const color = score >= 60 ? 'var(--fail)' : score >= 10 ? 'var(--warn)' : 'var(--pass)';
+  const lang = localStorage.getItem('slopai-lang') || 'id';
+  const en = lang === 'en';
+  const probLabel = en ? 'AI Probability' : 'Probabilitas AI';
+  const scaleL = en ? '0% Human' : '0% Manusia';
+  const scaleR = en ? '100% AI' : '100% AI';
   let ticks = '';
   for (let i = 0; i < 9; i++) ticks += '<div class="fake-tick"></div>';
   return '<div class="fake-meter">'
     + '<div class="fake-meter-top">'
-    + '<span class="fake-label">Probabilitas AI</span>'
+    + '<span class="fake-label">' + probLabel + '</span>'
     + '<span class="fake-pct" style="color:' + color + '">' + score + '%</span>'
     + '</div>'
     + '<div class="fake-bar"><div class="fake-track">'
     + '<div class="fake-fill" style="width:' + score + '%"></div>'
     + '<div class="fake-ticks">' + ticks + '</div>'
     + '</div></div>'
-    + '<div class="fake-scale"><span>0% Manusia</span><span>100% AI</span></div>'
+    + '<div class="fake-scale"><span>' + scaleL + '</span><span>' + scaleR + '</span></div>'
     + '<div class="fake-verdict"><strong>' + verdictLabel + '.</strong> ' + verdictDesc + '</div>'
     + '</div>';
 }
@@ -1565,8 +1594,11 @@ const I18N = {
     chars: 'karakter', words: 'kata',
     btn_analyze: 'Analisis', btn_sample: 'Contoh', btn_file: 'File', btn_clear: 'Hapus',
     faq_title: 'Pertanyaan umum',
+    hero_title: 'Detektor Tulisan AI',
     footer_tagline: 'slopAI — detektor tulisan AI gratis',
     footer_made: 'Dibuat oleh',
+    footer_github: 'GitHub',
+    footer_free: 'Gratis selamanya',
   },
   en: {
     nav_faq: 'FAQ',
@@ -1576,8 +1608,11 @@ const I18N = {
     chars: 'characters', words: 'words',
     btn_analyze: 'Analyze', btn_sample: 'Samples', btn_file: 'File', btn_clear: 'Clear',
     faq_title: 'Frequently asked questions',
+    hero_title: 'AI Text Detector',
     footer_tagline: 'slopAI — free AI text detector',
     footer_made: 'Made by',
+    footer_github: 'GitHub',
+    footer_free: 'Free forever',
   }
 };
 
