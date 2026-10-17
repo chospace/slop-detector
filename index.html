@@ -1047,7 +1047,7 @@ function analyze(text) {
     });
   }
 
-  return { score: slopScore, findings, words, topWords, sentLens };
+  return { score: Math.min(100, Math.round(slopScore)), findings, words, topWords, sentLens };
 }
 
 function verdict(score) {
