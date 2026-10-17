@@ -3,8 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Slop Detector — slop.ai.id</title>
-<meta name="description" content="Analisis teks untuk mendeteksi pola penulisan khas AI. Gratis, tanpa daftar, 100% di browser.">
+<title>slopAI — Detektor Tulisan AI</title>
+<meta name="description" content="slopAI — detektor tulisan AI gratis. Analisis 70+ pola linguistik, ritme kalimat, dan gaya penulisan AI. Tanpa daftar, 100% privat di browser.">
+<meta property="og:title" content="slopAI — Detektor Tulisan AI">
+<meta property="og:description" content="Tulisan ini bau AI nggak sih? Cek gratis, tanpa daftar, 100% privat.">
+<meta property="og:url" content="https://slop.ai.id">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://slop.ai.id/favicon.svg">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="slopAI — Detektor Tulisan AI">
+<meta name="twitter:description" content="Tulisan ini bau AI nggak sih? Cek gratis, tanpa daftar.">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
 :root {
@@ -42,11 +50,12 @@ body {
   opacity: 0.6; pointer-events: none;
 }
 .logo {
-  display: inline-block; font-size: 0.75rem; font-weight: 700;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 1rem;
-  padding: 0.4rem 1rem; border: 1px solid var(--border);
-  border-radius: 99px; background: var(--surface);
+  font-size: 2.75rem; font-weight: 800; letter-spacing: -0.03em;
+  margin-bottom: 0.25rem; line-height: 1;
+}
+.tagline {
+  font-size: 0.95rem; color: var(--muted); font-weight: 500;
+  margin-bottom: 1rem;
 }
 .hero h1 {
   font-size: 2.75rem; font-weight: 800; letter-spacing: -0.03em;
@@ -387,7 +396,8 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
       <circle cx="46.5" cy="46" r="2.2" fill="#fff"/>
     </svg>
   </div>
-  <div class="logo">slop.ai.id</div>
+  <div class="logo">slop<span style="color:var(--accent)">AI</span></div>
+  <div class="tagline">Detektor tulisan AI — gratis, tanpa daftar</div>
   <h1>Tulisan ini <span class="grad">bau AI</span> nggak sih?</h1>
   <p>Tempel teks atau masukkan URL. Kami analisis 70+ pola linguistik, ritme kalimat, dan struktur visual — lalu kasih tahu seberapa besar kemungkinan teks ini hasil generate AI.</p>
   <div class="free-badge">
@@ -443,11 +453,11 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
       </div>
     </details>
   </div>
-  <div>Dibuat oleh <a href="https://chospace.github.io">chospace</a></div>
+  <div>slopAI oleh <a href="https://chospace.github.io">chospace</a></div>
 </footer>
 
 <div style="margin-top:2.5rem;padding:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">
-  <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;text-align:center">Kenapa slop.ai.id?</h3>
+  <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem;text-align:center">Kenapa slopAI?</h3>
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;text-align:center;font-size:0.85rem">
     <div>
       <div style="font-size:1.5rem;margin-bottom:0.25rem">💰</div>
@@ -1037,7 +1047,7 @@ function runAnalysis(text) {
   let html = renderFakeMeter(r.score, v.label, v.desc);
 
   // Share buttons
-  const shareText = encodeURIComponent('Skor AI: ' + r.score + '% — ' + v.label + ' via slop.ai.id');
+  const shareText = encodeURIComponent('Skor AI: ' + r.score + '% — ' + v.label + ' via slopAI');
   const shareUrl = encodeURIComponent('https://slop.ai.id');
   html += '<div class="share-row"><span>Bagikan:</span>'
     + '<a class="share-btn" href="https://twitter.com/intent/tweet?text=' + shareText + '&url=' + shareUrl + '" target="_blank">X</a>'
