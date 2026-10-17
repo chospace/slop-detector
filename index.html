@@ -17,18 +17,17 @@
 <style>
 :root {
   --bg: #fafafa; --surface: #ffffff; --text: #111827; --muted: #6b7280;
-  --border: #e5e7eb; --accent: #4f46e5; --accent-soft: #eef2ff;
+  --border: #e5e7eb; --accent: #f59e0b; --accent-soft: #fffbeb;
   --pass: #059669; --pass-bg: #ecfdf5;
   --warn: #d97706; --warn-bg: #fffbeb;
   --fail: #dc2626; --fail-bg: #fef2f2;
   --radius: 12px;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1115; --surface: #1a1d24; --text: #e5e7eb; --muted: #9ca3af;
-    --border: #2e323b; --accent: #818cf8; --accent-soft: #1e1f3a;
-    --pass-bg: #052e22; --warn-bg: #3a2a0a; --fail-bg: #3a0d0d;
-  }
+/* Dark mode hanya jika user eksplisit pilih */
+[data-theme="dark"] {
+  --bg: #0f1115; --surface: #1a1d24; --text: #e5e7eb; --muted: #9ca3af;
+  --border: #2e323b; --accent: #fbbf24; --accent-soft: #2a2111;
+  --pass-bg: #052e22; --warn-bg: #3a2a0a; --fail-bg: #3a0d0d;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -53,6 +52,14 @@ body {
   font-size: 2.75rem; font-weight: 800; letter-spacing: -0.03em;
   margin-bottom: 0.25rem; line-height: 1;
 }
+.logo-text {
+  font-size: 3rem; font-weight: 800; letter-spacing: -0.03em;
+  margin-bottom: 0.25rem; line-height: 1;
+}
+.logo-text .logo-ai {
+  color: #f59e0b;
+}
+[data-theme="dark"] .logo-text .logo-ai { color: #fbbf24; }
 .tagline {
   font-size: 0.95rem; color: var(--muted); font-weight: 500;
   margin-bottom: 1rem;
@@ -62,7 +69,7 @@ body {
   line-height: 1.1; margin-bottom: 1rem;
 }
 .hero h1 .grad {
-  background: linear-gradient(135deg, var(--accent), #c084fc);
+  background: linear-gradient(135deg, var(--accent), #d4a017);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
@@ -385,18 +392,7 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 <div class="container">
 
 <div class="hero">
-  <div style="margin-bottom:0.5rem">
-    <svg width="240" height="67" viewBox="0 0 360 100" xmlns="http://www.w3.org/2000/svg">
-      <text x="8" y="68" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="56" font-weight="800" fill="var(--text)">sl</text>
-      <g>
-        <circle cx="77" cy="54" r="15" fill="none" stroke="#4f46e5" stroke-width="6"/>
-        <line x1="87" y1="64" x2="99" y2="76" stroke="#4f46e5" stroke-width="6.5" stroke-linecap="round"/>
-        <circle cx="77" cy="54" r="5" fill="#4f46e5"/>
-      </g>
-      <text x="98" y="68" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="56" font-weight="800" fill="var(--text)">p</text>
-      <text x="133" y="68" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="56" font-weight="800" fill="#4f46e5">AI</text>
-    </svg>
-  </div>
+  <div class="logo-text">slop<span class="logo-ai">AI</span></div>
   <div class="tagline">Detektor tulisan AI — gratis, tanpa daftar</div>
   <h1>Tulisan ini <span class="grad">bau AI</span> nggak sih?</h1>
   <p>Tempel teks atau masukkan URL. Kami analisis 70+ pola linguistik, ritme kalimat, dan struktur visual — lalu kasih tahu seberapa besar kemungkinan teks ini hasil generate AI.</p>
