@@ -197,39 +197,23 @@ body {
 }
 .share-btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* Tabs */
-.mode-tabs {
-  display: inline-flex; background: var(--surface);
-  border: 1px solid var(--border); border-radius: 10px;
-  padding: 4px; margin-bottom: 1.25rem; gap: 2px;
-}
-.mode-tab {
-  padding: 0.55rem 1.25rem; border: none; border-radius: 7px;
-  background: transparent; color: var(--muted); cursor: pointer;
-  font-size: 0.9rem; font-weight: 600; transition: all 0.15s;
-}
-.mode-tab.active { background: var(--accent-soft); color: var(--accent); }
-
 /* Inputs */
-textarea, #urlInput {
+textarea {
   width: 100%; padding: 1rem 1.1rem; font-size: 1rem; font-family: inherit;
   border: 1px solid var(--border); border-radius: var(--radius);
   background: var(--surface); color: var(--text);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 textarea { min-height: 280px; resize: vertical; line-height: 1.7; }
-textarea:focus, #urlInput:focus {
+textarea:focus {
   outline: none; border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
-#urlInput { margin-bottom: 0; }
-.url-hint { color: var(--muted); font-size: 0.85rem; margin: 0.5rem 0 0; }
 .char-count {
   text-align: right; color: var(--muted);
   font-size: 0.8rem; margin: 0.4rem 0 1rem;
   font-variant-numeric: tabular-nums;
 }
-#urlMode { display: none; }
 
 /* Buttons */
 .btn-row { display: flex; gap: 0.6rem; margin: 1.25rem 0 2.5rem; }
@@ -470,7 +454,7 @@ textarea:focus, #urlInput:focus {
 
 /* Print: hanya hasil analisis */
 @media print {
-  .topnav, .page-head, .mode-tabs, #textMode, #urlMode,
+  .topnav, .page-head, #textMode,
   .btn-row, .pro-actions, footer, #historyPanel { display: none !important; }
   body { background: #fff; }
   .fake-meter, .finding { break-inside: avoid; }
@@ -588,23 +572,13 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
 <div class="page-head">
   <h1 data-i18n="hero_title">Detektor Tulisan AI</h1>
-  <p data-i18n="hero_desc">Tempel teks atau masukkan URL. Kami menganalisis pola linguistik, ritme kalimat, dan struktur penulisan untuk memperkirakan kemungkinan teks dibuat oleh AI.</p>
+  <p data-i18n="hero_desc">Tempel teks untuk dianalisis. Kami memeriksa pola linguistik, ritme kalimat, dan struktur penulisan untuk memperkirakan kemungkinan teks dibuat oleh AI.</p>
   <span class="free-note" data-i18n="hero_badges">✓ Gratis · Tanpa daftar · 100% privat di browser</span>
-</div>
-
-<div class="mode-tabs">
-  <button class="mode-tab active" id="tabText">Teks</button>
-  <button class="mode-tab" id="tabUrl">URL</button>
 </div>
 
 <div id="textMode">
   <textarea id="input" data-i18n-ph="input_placeholder" placeholder="Tempel teks di sini untuk dianalisis..."></textarea>
   <div class="char-count"><span id="charCount">0</span> <span data-i18n="chars">karakter</span> · <span id="wordCount">0</span> <span data-i18n="words">kata</span></div>
-</div>
-
-<div id="urlMode">
-  <input type="url" id="urlInput" placeholder="https://contoh.com/artikel">
-  <p class="url-hint">Kami akan mengambil teks dari halaman tersebut dan menganalisisnya.</p>
 </div>
 
 <div class="btn-row">
@@ -1177,58 +1151,6 @@ function verdict(score) {
 }
 
 // ===== MODE TABS =====
-const tabText = document.getElementById('tabText');
-const tabUrl = document.getElementById('tabUrl');
-const textMode = document.getElementById('textMode');
-const urlMode = document.getElementById('urlMode');
-let currentMode = 'text';
-
-tabText.addEventListener('click', () => {
-  currentMode = 'text';
-  tabText.classList.add('active'); tabUrl.classList.remove('active');
-  textMode.style.display = 'block'; urlMode.style.display = 'none';
-});
-tabUrl.addEventListener('click', () => {
-  currentMode = 'url';
-  tabUrl.classList.add('active'); tabText.classList.remove('active');
-  textMode.style.display = 'none'; urlMode.style.display = 'block';
-});
-
-// ===== URL FETCH =====
-async function fetchUrlText(url) {
-  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-  const api = 'https://api.microlink.io/?url=' + encodeURIComponent(url)
-    + '&data.text.selector=article,main,body&data.text.attr=text';
-  const res = await fetch(api);
-  if (!res.ok) throw new Error('Gagal mengambil halaman.');
-  const data = await res.json();
-  if (data.status !== 'success') throw new Error('Gagal mengambil halaman.');
-  let text = (data.data && data.data.text) || '';
-
-  // Bersihkan artefak kode JS yang lolos ekstraksi
-  text = text
-    .split('\n')
-    .filter(line => {
-      const t = line.trim();
-      if (!t) return false;
-      if (t.length > 400) return false; // minified JS = baris super panjang
-      // Pola khas kode: banyak { } ; = ( ) tanpa spasi natural
-      const codeChars = (t.match(/[{};=()<>]/g) || []).length;
-      if (codeChars > t.length * 0.15) return false;
-      // Baris yang didominasi camelCase tanpa spasi
-      const words = t.split(/\s+/);
-      if (words.length <= 2 && /^[a-zA-Z0-9_$]+$/.test(t) && t.length > 15) return false;
-      return true;
-    })
-    .join('\n');
-
-  text = text.replace(/\s{3,}/g, '\n\n').trim();
-  const wc = text.split(/\s+/).filter(w => w.length).length;
-  if (wc < 10) throw new Error('Teks terlalu sedikit untuk dianalisis.');
-  if (wc > 5000) text = text.split(/\s+/).slice(0, 5000).join(' ');
-  return text;
-}
-
 // ===== UI =====
 const input = document.getElementById('input');
 const result = document.getElementById('result');
@@ -1299,42 +1221,12 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
-document.getElementById('analyzeBtn').addEventListener('click', async () => {
+document.getElementById('analyzeBtn').addEventListener('click', () => {
   result.style.display = 'block';
-  if (currentMode === 'url') {
-    const urlVal = document.getElementById('urlInput').value.trim();
-    if (!urlVal) {
-      result.innerHTML = '<div class="error-box">Masukkan URL terlebih dahulu.</div>';
-      return;
-    }
-    result.innerHTML = '<div class="loading"><div class="spinner"></div><br>Mengambil halaman…</div>';
-    try {
-      const fetchedText = await fetchUrlText(urlVal);
-      input.value = fetchedText;
-      charCount.textContent = fetchedText.length.toLocaleString('id-ID');
-      runAnalysis(fetchedText);
-    } catch (e) {
-      result.innerHTML = '<div class="error-box">' + escapeHtml(e.message) + '<br><span style="font-size:0.85rem;opacity:0.8">Alternatif: salin teks secara manual ke mode Teks.</span></div>';
-    }
-    return;
-  }
   const text = input.value.trim();
   if (!text) return;
   runAnalysis(text);
 });
-
-function scoreRing(score, color) {
-  const r = 48, c = 2 * Math.PI * r;
-  const offset = c - (score / 100) * c;
-  return '<div class="score-ring">'
-    + '<svg width="110" height="110" viewBox="0 0 110 110">'
-    + '<circle cx="55" cy="55" r="' + r + '" fill="none" stroke="var(--border)" stroke-width="9"/>'
-    + '<circle cx="55" cy="55" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="9"'
-    + ' stroke-linecap="round" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + offset.toFixed(1) + '"/>'
-    + '</svg>'
-    + '<div class="score-num" style="color:' + color + '">' + score + '</div>'
-    + '</div>';
-}
 
 function runAnalysis(text) {
   const r = analyze(text);
@@ -1588,7 +1480,7 @@ function escapeHtml(s) {
 const I18N = {
   id: {
     nav_faq: 'FAQ',
-    hero_desc: 'Tempel teks atau masukkan URL. Kami menganalisis pola linguistik, ritme kalimat, dan struktur penulisan untuk memperkirakan kemungkinan teks dibuat oleh AI.',
+    hero_desc: 'Tempel teks untuk dianalisis. Kami memeriksa pola linguistik, ritme kalimat, dan struktur penulisan untuk memperkirakan kemungkinan teks dibuat oleh AI.',
     hero_badges: '✓ Gratis · Tanpa daftar · 100% privat di browser',
     input_placeholder: 'Tempel teks di sini untuk dianalisis...',
     chars: 'karakter', words: 'kata',
@@ -1602,7 +1494,7 @@ const I18N = {
   },
   en: {
     nav_faq: 'FAQ',
-    hero_desc: 'Paste text or enter a URL. We analyze linguistic patterns, sentence rhythm, and writing structure to estimate the likelihood text was AI-generated.',
+    hero_desc: 'Paste text to analyze. We check linguistic patterns, sentence rhythm, and writing structure to estimate the likelihood text was AI-generated.',
     hero_badges: '✓ Free · No sign-up · 100% private in your browser',
     input_placeholder: 'Paste text here to analyze...',
     chars: 'characters', words: 'words',
