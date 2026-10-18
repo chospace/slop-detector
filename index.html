@@ -197,18 +197,34 @@ body {
 }
 .share-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+/* Tabs */
+.mode-tabs {
+  display: inline-flex; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 4px; margin-bottom: 1.25rem; gap: 2px;
+}
+.mode-tab {
+  padding: 0.55rem 1.25rem; border: none; border-radius: 7px;
+  background: transparent; color: var(--muted); cursor: pointer;
+  font-size: 0.9rem; font-weight: 600; transition: all 0.15s;
+}
+.mode-tab.active { background: var(--accent-soft); color: var(--accent); }
+
 /* Inputs */
-textarea {
+textarea, #urlInput {
   width: 100%; padding: 1rem 1.1rem; font-size: 1rem; font-family: inherit;
   border: 1px solid var(--border); border-radius: var(--radius);
   background: var(--surface); color: var(--text);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 textarea { min-height: 280px; resize: vertical; line-height: 1.7; }
-textarea:focus {
+textarea:focus, #urlInput:focus {
   outline: none; border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
+#urlInput { margin-bottom: 0; }
+.url-hint { color: var(--muted); font-size: 0.85rem; margin: 0.5rem 0 0; }
+#urlMode { display: none; }
 .char-count {
   text-align: right; color: var(--muted);
   font-size: 0.8rem; margin: 0.4rem 0 1rem;
@@ -454,7 +470,7 @@ textarea:focus {
 
 /* Print: hanya hasil analisis */
 @media print {
-  .topnav, .page-head, #textMode,
+  .topnav, .page-head, .mode-tabs, #textMode, #urlMode,
   .btn-row, .pro-actions, footer, #historyPanel { display: none !important; }
   body { background: #fff; }
   .fake-meter, .finding { break-inside: avoid; }
@@ -576,9 +592,19 @@ footer a { color: var(--accent); text-decoration: none; font-weight: 600; }
   <span class="free-note" data-i18n="hero_badges">✓ Gratis · Tanpa daftar · 100% privat di browser</span>
 </div>
 
+<div class="mode-tabs">
+  <button class="mode-tab active" id="tabText" data-i18n="tab_text">Teks</button>
+  <button class="mode-tab" id="tabUrl" data-i18n="tab_url">URL</button>
+</div>
+
 <div id="textMode">
   <textarea id="input" data-i18n-ph="input_placeholder" placeholder="Tempel teks di sini untuk dianalisis..."></textarea>
   <div class="char-count"><span id="charCount">0</span> <span data-i18n="chars">karakter</span> · <span id="wordCount">0</span> <span data-i18n="words">kata</span></div>
+</div>
+
+<div id="urlMode">
+  <input type="url" id="urlInput" data-i18n-ph="url_placeholder" placeholder="https://contoh.com/artikel">
+  <p class="url-hint" data-i18n="url_hint">Kami akan mengambil teks dari halaman tersebut dan menganalisisnya.</p>
 </div>
 
 <div class="btn-row">
@@ -1151,6 +1177,63 @@ function verdict(score) {
 }
 
 // ===== MODE TABS =====
+const tabText = document.getElementById('tabText');
+const tabUrl = document.getElementById('tabUrl');
+const textMode = document.getElementById('textMode');
+const urlMode = document.getElementById('urlMode');
+let currentMode = 'text';
+
+function updateBtnVisibility() {
+  const isUrl = currentMode === 'url';
+  document.getElementById('sampleBtn').style.display = isUrl ? 'none' : '';
+  document.getElementById('uploadBtn').style.display = isUrl ? 'none' : '';
+  document.getElementById('clearBtn').style.display = isUrl ? 'none' : '';
+  document.getElementById('sampleMenu').style.display = 'none';
+}
+
+tabText.addEventListener('click', () => {
+  currentMode = 'text';
+  tabText.classList.add('active'); tabUrl.classList.remove('active');
+  textMode.style.display = 'block'; urlMode.style.display = 'none';
+  updateBtnVisibility();
+});
+tabUrl.addEventListener('click', () => {
+  currentMode = 'url';
+  tabUrl.classList.add('active'); tabText.classList.remove('active');
+  textMode.style.display = 'none'; urlMode.style.display = 'block';
+  updateBtnVisibility();
+});
+
+// ===== URL FETCH =====
+async function fetchUrlText(url) {
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  const api = 'https://api.microlink.io/?url=' + encodeURIComponent(url)
+    + '&data.text.selector=article,main,body&data.text.attr=text';
+  const res = await fetch(api);
+  if (!res.ok) throw new Error('Gagal mengambil halaman.');
+  const data = await res.json();
+  if (data.status !== 'success') throw new Error('Gagal mengambil halaman.');
+  let text = (data.data && data.data.text) || '';
+  text = text
+    .split('\n')
+    .filter(line => {
+      const t = line.trim();
+      if (!t) return false;
+      if (t.length > 400) return false;
+      const codeChars = (t.match(/[{};=()<>]/g) || []).length;
+      if (codeChars > t.length * 0.15) return false;
+      const words = t.split(/\s+/);
+      if (words.length <= 2 && /^[a-zA-Z0-9_$]+$/.test(t) && t.length > 15) return false;
+      return true;
+    })
+    .join('\n');
+  text = text.replace(/\s{3,}/g, '\n\n').trim();
+  const wc = text.split(/\s+/).filter(w => w.length).length;
+  if (wc < 10) throw new Error('Teks terlalu sedikit untuk dianalisis.');
+  if (wc > 5000) text = text.split(/\s+/).slice(0, 5000).join(' ');
+  return text;
+}
+
 // ===== UI =====
 const input = document.getElementById('input');
 const result = document.getElementById('result');
@@ -1221,8 +1304,26 @@ document.getElementById('fileInput').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
-document.getElementById('analyzeBtn').addEventListener('click', () => {
+document.getElementById('analyzeBtn').addEventListener('click', async () => {
   result.style.display = 'block';
+  if (currentMode === 'url') {
+    const urlVal = document.getElementById('urlInput').value.trim();
+    if (!urlVal) {
+      const lang = localStorage.getItem('slopai-lang') || 'id';
+      result.innerHTML = '<div class="error-box">' + (lang === 'en' ? 'Please enter a URL first.' : 'Masukkan URL terlebih dahulu.') + '</div>';
+      return;
+    }
+    result.innerHTML = '<div class="loading"><div class="spinner"></div><br>' + (localStorage.getItem('slopai-lang') === 'en' ? 'Fetching page…' : 'Mengambil halaman…') + '</div>';
+    try {
+      const fetchedText = await fetchUrlText(urlVal);
+      input.value = fetchedText;
+      updateWordCount();
+      runAnalysis(fetchedText);
+    } catch (e) {
+      result.innerHTML = '<div class="error-box">' + escapeHtml(e.message) + '</div>';
+    }
+    return;
+  }
   const text = input.value.trim();
   if (!text) return;
   runAnalysis(text);
@@ -1487,6 +1588,9 @@ const I18N = {
     btn_analyze: 'Analisis', btn_sample: 'Contoh', btn_file: 'File', btn_clear: 'Hapus',
     faq_title: 'Pertanyaan umum',
     hero_title: 'Detektor Tulisan AI',
+    tab_text: 'Teks', tab_url: 'URL',
+    url_placeholder: 'https://contoh.com/artikel',
+    url_hint: 'Kami akan mengambil teks dari halaman tersebut dan menganalisisnya.',
     footer_tagline: 'slopAI — detektor tulisan AI gratis',
     footer_made: 'Dibuat oleh',
     footer_github: 'GitHub',
@@ -1501,6 +1605,9 @@ const I18N = {
     btn_analyze: 'Analyze', btn_sample: 'Samples', btn_file: 'File', btn_clear: 'Clear',
     faq_title: 'Frequently asked questions',
     hero_title: 'AI Text Detector',
+    tab_text: 'Text', tab_url: 'URL',
+    url_placeholder: 'https://example.com/article',
+    url_hint: 'We will fetch the text from that page and analyze it.',
     footer_tagline: 'slopAI — free AI text detector',
     footer_made: 'Made by',
     footer_github: 'GitHub',
