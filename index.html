@@ -1229,7 +1229,19 @@ async function fetchUrlText(url) {
     .join('\n');
   text = text.replace(/\s{3,}/g, '\n\n').trim();
   const wc = text.split(/\s+/).filter(w => w.length).length;
-  if (wc < 10) throw new Error('Teks terlalu sedikit untuk dianalisis.');
+  const lang = localStorage.getItem('slopai-lang') || 'id';
+  if (wc < 10) {
+    // Cek apakah raw text ada tapi habis kena filter = kemungkinan situs JS-heavy
+    const rawWc = ((data.data && data.data.text) || '').split(/\s+/).filter(w => w.length).length;
+    if (rawWc >= 50) {
+      throw new Error(lang === 'en'
+        ? 'Could not read article text — this site likely loads content via JavaScript. Please copy-paste the text manually.'
+        : 'Tidak bisa membaca teks artikel — situs ini kemungkinan memuat konten via JavaScript. Silakan salin-tempel teks secara manual.');
+    }
+    throw new Error(lang === 'en'
+      ? 'Too little text to analyze (min 10 words).'
+      : 'Teks terlalu sedikit untuk dianalisis (min 10 kata).');
+  }
   if (wc > 5000) text = text.split(/\s+/).slice(0, 5000).join(' ');
   return text;
 }
